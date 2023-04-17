@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "deno",
+      "command": "run",
+      "args": [
+        "--allow-read",
+        "--allow-write=logs/",
+        "src/main.ts",
+        "93109",
+        "02119"
+      ],
+      "problemMatcher": ["$deno"],
+      "label": "deno task: run",
+      "detail": "deno run --allow-read --allow-write=logs/ src/main.ts"
+    }
+  ]
+}

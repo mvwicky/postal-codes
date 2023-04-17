@@ -1,0 +1,11 @@
+{
+  "tasks": {
+    "run": "deno run --allow-read --allow-write=logs/ src/main.ts"
+  },
+  "imports": {
+    "std/": "https://deno.land/std@0.183.0/",
+    "kysely": "npm:kysely@0.24.2",
+    "better-sqlite3": "npm:better-sqlite3@8.2.0",
+    "zod": "https://deno.land/x/zod@v3.21.4/mod.ts"
+  }
+}
