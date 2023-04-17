@@ -1,4 +1,4 @@
-import { type ZIPEntry } from "./zip_code.ts";
+import { type ZIPEntry } from "./schemas.ts";
 // @deno-types="npm:@types/better-sqlite3"
 import SqliteDatabse from "better-sqlite3";
 import { Generated, Kysely, SqliteDialect } from "kysely";

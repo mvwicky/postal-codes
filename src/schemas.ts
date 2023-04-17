@@ -14,6 +14,9 @@ export const ZIPEntrySchema = z.object({
   world_region: z.string(),
   country: z.string(),
   latitude: z.string().transform((val) => Number(val)).refine(
+    (val) => !Number.isNaN(val),
+    { message: "latitude was NaN" },
+  ).refine(
     (val) => val !== 0,
     { message: "latitude was zero" },
   ),
@@ -25,3 +28,20 @@ export const ZIPEntrySchema = z.object({
 });
 
 export type ZIPEntry = z.infer<typeof ZIPEntrySchema>;
+
+export const GeoNameSchema = z.object({
+  country_code: z.string(),
+  postal_code: z.string(),
+  place_name: z.string(),
+  admin_name_1: z.string(),
+  admin_code_1: z.string(),
+  admin_name_2: z.string(),
+  admin_code_2: z.string(),
+  admin_name_3: z.string(),
+  admin_code_3: z.string(),
+  latitude: z.string().transform((val) => Number(val)),
+  longitude: z.string().transform((val) => Number(val)),
+  accuracy: z.string().transform((val) => Number(val)),
+});
+
+export type GeoName = z.infer<typeof GeoNameSchema>;

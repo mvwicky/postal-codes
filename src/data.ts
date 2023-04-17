@@ -1,7 +1,7 @@
 import * as csv from "std/csv/mod.ts";
 
 import { logger } from "./log.ts";
-import { type ZIPEntry, ZIPEntrySchema } from "./zip_code.ts";
+import { type ZIPEntry, ZIPEntrySchema } from "./schemas.ts";
 
 function toZIPEntry(inp: Record<string, unknown>): ZIPEntry | null {
   const result = ZIPEntrySchema.safeParse(inp);

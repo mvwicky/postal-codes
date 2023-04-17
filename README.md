@@ -3,3 +3,31 @@
 Where I figure out postal code parsing.
 
 ## Data Sources
+
+- [ODA](./data/ODA_QC_v1.zip): Quebec specific Canadian postal code data. (Huge and not super helpful.)
+- [`zip_code_database.csv`](./data/zip_code_database.csv): US Zip Code Data (from [](https://www.unitedstateszipcodes.org/zip-code-database/))
+
+### [geonames.org](https://download.geonames.org/export/zip/)
+
+- [US](./data/US/US.txt)
+- [CA](./data/CA/CA.txt)
+
+#### Format
+
+TSV files with the following fields:
+
+- country code
+- postal code
+- place name
+- admin name 1
+- admin code 1
+- admin name 2
+- admin code 2
+- admin name 3
+- admin code 3
+- latitude (estimated)
+- longitude (estimated)
+- accuracy
+  - 1: estimated
+  - 4: geonameid
+  - 6: centroid of address or shape
