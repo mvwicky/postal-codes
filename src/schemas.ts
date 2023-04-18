@@ -21,6 +21,9 @@ export const ZIPEntrySchema = z.object({
     { message: "latitude was zero" },
   ),
   longitude: z.string().transform((val) => Number(val)).refine(
+    (val) => !Number.isNaN(val),
+    { message: "longitude was NaN" },
+  ).refine(
     (val) => val !== 0,
     { message: "longitude was zero" },
   ),
