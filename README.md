@@ -4,8 +4,10 @@ Where I figure out postal code parsing.
 
 ## Data Sources
 
-- [ODA](./data/ODA_QC_v1.zip): Quebec specific Canadian postal code data. (Huge and not super helpful.)
-- [`zip_code_database.csv`](./data/zip_code_database.csv): US Zip Code Data (from [](https://www.unitedstateszipcodes.org/zip-code-database/))
+- [ODA](./data/ODA_QC_v1.zip): Quebec specific Canadian postal code data. (Huge
+  and not super helpful.)
+- [`zip_code_database.csv`](./data/zip_code_database.csv): US Zip Code Data
+  (from [](https://www.unitedstateszipcodes.org/zip-code-database/))
 
 ### [geonames.org](https://download.geonames.org/export/zip/)
 

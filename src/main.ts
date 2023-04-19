@@ -1,9 +1,12 @@
+/// <reference types="npm:@types/node" />
+
 import { format } from "std/fmt/duration.ts";
 import * as path from "std/path/mod.ts";
 
-import { logger, setupLogging } from "./log.ts";
+import { getConfig } from "./config.ts";
 import { hDist, type Point } from "./distance.ts";
 import { loadZIPs } from "./data.ts";
+import { logger, setupLogging } from "./log.ts";
 
 if (import.meta.main) {
   const start = performance.now();
@@ -13,7 +16,8 @@ if (import.meta.main) {
     log.warning("Two ZIP codes required.");
     Deno.exit(1);
   }
-  const dataFilePath = path.join(Deno.cwd(), "data", "zip_code_database.csv");
+  const { dataDir } = await getConfig();
+  const dataFilePath = path.join(Deno.cwd(), dataDir, "zip_code_database.csv");
   const entryMap = await loadZIPs(dataFilePath);
   const [zip1, zip2] = Deno.args;
   const z1 = entryMap.get(zip1);

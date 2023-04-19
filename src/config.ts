@@ -1,10 +1,22 @@
 import * as c12 from "c12";
 
-export async function getConfig() {
-  const { config } = await c12.loadConfig({
+interface Config {
+  dataDir: string;
+}
+
+const DEFAULT_CONFIG: Config = { dataDir: "data" };
+
+let _config: Config | null = null;
+
+export async function getConfig(): Promise<Config> {
+  if (_config) {
+    return _config;
+  }
+  const { config } = await c12.loadConfig<Config>({
     name: "postal-codes",
     rcFile: false,
-    defaults: {},
+    defaults: DEFAULT_CONFIG,
   });
-  return config;
+  _config = config ?? DEFAULT_CONFIG;
+  return _config;
 }
