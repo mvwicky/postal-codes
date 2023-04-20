@@ -6,7 +6,7 @@ export interface CountryData {
   dataFileName: string;
 }
 
-export const COUNTRIES = new Map<Country, Readonly<CountryData>>([["CA", {
+export const COUNTRIES = new Map<string, Readonly<CountryData>>([["CA", {
   url: new URL("https://download.geonames.org/export/zip/CA_full.csv.zip"),
   dataFileName: "CA_full.txt",
 }], ["US", {

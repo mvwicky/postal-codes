@@ -140,7 +140,8 @@ async function parseCountryData(
     total += 1;
     const res = GeoNameSchema.safeParse(elem);
     if (res.success) {
-      geoNames.set(res.data.postal_code, res.data);
+      const key = res.data.postal_code.toLocaleUpperCase().replace(/\s/g, "");
+      geoNames.set(key, res.data);
     } else {
       failed += 1;
     }
@@ -154,7 +155,7 @@ async function doLoadCountryData(
 ): Promise<Map<string, GeoName> | null> {
   const log = logger();
   const cfg = await getConfig();
-  const dataDir = path.join(Deno.cwd(), cfg.dataDir);
+  const dataDir = path.resolve(Deno.cwd(), cfg.dataDir);
   const dirExists = await exists(dataDir, { isDirectory: true });
   if (!dirExists) {
     log.info(`Creating data directory (${dataDir})`);
@@ -185,8 +186,8 @@ async function doLoadCountryData(
 }
 
 async function loadCountryData(
-  country: Country,
-  timeout: number,
+  country: string,
+  timeout?: number,
 ): Promise<Map<string, GeoName> | null> {
   const c = COUNTRIES.get(country);
   if (c) {

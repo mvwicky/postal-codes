@@ -2,9 +2,10 @@ import * as c12 from "c12";
 
 interface Config {
   dataDir: string;
+  defaultTimeout: number;
 }
 
-const DEFAULT_CONFIG: Config = { dataDir: "data" };
+const DEFAULT_CONFIG: Config = { dataDir: "data", defaultTimeout: 10000 };
 
 let _config: Config | null = null;
 
