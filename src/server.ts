@@ -60,14 +60,28 @@ const r = new oak.Router().use(
   router.allowedMethods(),
 );
 const app = new oak.Application();
+
+app.use(async (ctx, next) => {
+  logger().info(`${ctx.request.method} ${ctx.request.url}`);
+  await next();
+});
+
+app.use(async (ctx, next) => {
+  const start = performance.now();
+  await next();
+  const elapsed = performance.now() - start;
+  ctx.response.headers.set("X-Response-Time", elapsed.toFixed(3));
+});
+
 app.use(r.routes());
 app.use(r.allowedMethods());
 
 app.addEventListener("listen", ({ hostname, port, secure }) => {
   setupLogging();
+  const scheme = `http${secure ? "s" : ""}`;
   logger().info(
-    `Listening on http${secure ? "s" : ""}//${hostname ?? "localhost"}:${port}`,
+    `Listening on ${scheme}://${hostname ?? "localhost"}:${port}`,
   );
 });
-// await app.listen({ port: 8001 });
+
 export { app };

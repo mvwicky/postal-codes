@@ -2,3 +2,7 @@ data/
 .vscode/
 logs/
 *.db
+**/.DS_Store
+.git/
+.gitignore
+.dockerignore
