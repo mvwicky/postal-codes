@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "../deps.ts";
 
 export const ZIPEntrySchema = z.object({
   zip: z.string(),

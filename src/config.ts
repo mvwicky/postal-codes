@@ -1,4 +1,4 @@
-import * as c12 from "c12";
+import { c12 } from "../deps.ts";
 
 interface Config {
   dataDir: string;

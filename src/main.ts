@@ -1,6 +1,6 @@
 /// <reference types="npm:@types/node" />
 
-import { format } from "std/fmt/duration.ts";
+import { dFormat } from "../deps.ts";
 
 import { hDist, type Point } from "./distance.ts";
 import { loadCountryData } from "./data.ts";
@@ -39,6 +39,6 @@ if (import.meta.main) {
     log.info(`${fmt.format(d / 1609)} miles`);
   }
   log.info(
-    `Elapsed: ${format(performance.now() - start, { ignoreZero: true })}`,
+    `Elapsed: ${dFormat(performance.now() - start, { ignoreZero: true })}`,
   );
 }

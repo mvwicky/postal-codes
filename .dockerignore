@@ -1,8 +1,9 @@
-data/
-.vscode/
-logs/
-*.db
-**/.DS_Store
+.dockerignore
 .git/
 .gitignore
-.dockerignore
+.vscode/
+*.db
+**/.DS_Store
+data/
+logs/
+Makefile

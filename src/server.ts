@@ -1,9 +1,8 @@
-import * as oak from "oak";
-
-import { type GeoName } from "./schemas.ts";
+import { oak } from "../deps.ts";
 import { loadCountryData } from "./data.ts";
 import { hDist } from "./distance.ts";
 import { logger, setupLogging } from "./log.ts";
+import { type GeoName } from "./schemas.ts";
 
 const data = new Map<string, Map<string, GeoName>>();
 

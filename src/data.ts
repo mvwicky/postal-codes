@@ -1,9 +1,11 @@
-import * as path from "std/path/mod.ts";
-import { ensureDir, exists } from "std/fs/mod.ts";
-import * as csv from "std/csv/mod.ts";
-
-import { createWriteStream } from "node:fs";
-import { Buffer } from "node:buffer";
+import {
+  Buffer,
+  createWriteStream,
+  csv,
+  ensureDir,
+  exists,
+  path,
+} from "../deps.ts";
 
 import { getConfig } from "./config.ts";
 import { logger } from "./log.ts";

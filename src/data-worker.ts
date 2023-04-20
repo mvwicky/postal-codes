@@ -1,15 +1,11 @@
 /// <reference no-default-lib="true" />
 /// <reference lib="deno.worker" />
 
-import * as path from "std/path/mod.ts";
-import { exists } from "std/fs/mod.ts";
-
-import { Buffer } from "node:buffer";
-
+import { Buffer, exists, path } from "../deps.ts";
 import { getConfig } from "./config.ts";
 import { COUNTRIES, type CountryData } from "./countries.ts";
-import { type GeoName } from "./schemas.ts";
 import { logger, setupLogging } from "./log.ts";
+import { type GeoName } from "./schemas.ts";
 import * as zip from "./zipfiles.ts";
 
 async function fetchCountryData(url: URL): Promise<Buffer | null> {

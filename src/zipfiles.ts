@@ -1,8 +1,4 @@
-import { type Buffer } from "node:buffer";
-import { type Readable } from "node:stream";
-
-// @deno-types="npm:@types/yauzl"
-import yauzl from "yauzl";
+import { type Buffer, type Readable, yauzl } from "../deps.ts";
 
 export function fromBuffer(
   buf: Buffer,
