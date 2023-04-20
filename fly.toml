@@ -6,9 +6,9 @@
 app = "postal-codes"
 primary_region = "lax"
 
-[mounts]
-source = "postal_codes_data"
-destination = "/app/data"
+# [mounts]
+# source = "postal_codes_data"
+# destination = "/app/data"
 
 [http_service]
 internal_port = 8000

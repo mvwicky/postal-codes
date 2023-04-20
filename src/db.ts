@@ -2,18 +2,30 @@
 import SqliteDatabse from "better-sqlite3";
 import { Generated, Kysely, SqliteDialect } from "kysely";
 
-import { type ZIPEntry } from "./schemas.ts";
+import { type GeoName, type ZIPEntry } from "./schemas.ts";
 
 interface ZIPRow extends ZIPEntry {
   id: Generated<number>;
 }
 
-interface Database {
-  zip: ZIPRow;
+interface GeoNameRow extends GeoName {
+  id: Generated<number>;
 }
 
-const db = new Kysely<Database>({
-  dialect: new SqliteDialect({ database: new SqliteDatabse(":memory:") }),
-});
+interface Database {
+  geo: GeoNameRow;
+}
 
-export { db };
+let db: Kysely<Database>;
+
+function getDB(): Kysely<Database> {
+  if (db) {
+    return db;
+  }
+  db = new Kysely<Database>({
+    dialect: new SqliteDialect({ database: new SqliteDatabse(":memory:") }),
+  });
+  return db;
+}
+
+export { getDB };

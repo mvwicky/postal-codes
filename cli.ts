@@ -1,10 +1,9 @@
 /// <reference types="npm:@types/node" />
 
-import { dFormat } from "../deps.ts";
-
-import { hDist, type Point } from "./distance.ts";
-import { loadCountryData } from "./data.ts";
-import { logger, setupLogging } from "./log.ts";
+import { dFormat } from "./deps.ts";
+import { loadCountryData } from "./src/data.ts";
+import { hDist, type Point } from "./src/distance.ts";
+import { logger, setupLogging } from "./src/log.ts";
 
 if (import.meta.main) {
   const start = performance.now();
