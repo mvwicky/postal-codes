@@ -69,4 +69,5 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
     `Listening on http${secure ? "s" : ""}//${hostname ?? "localhost"}:${port}`,
   );
 });
-await app.listen({ port: 8001 });
+// await app.listen({ port: 8001 });
+export { app };
