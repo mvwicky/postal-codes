@@ -1,8 +1,9 @@
 export * as csv from "std/csv/mod.ts";
+export { format as bFormat } from "std/fmt/bytes.ts";
+export { format as dFormat } from "std/fmt/duration.ts";
 export { ensureDir, exists } from "std/fs/mod.ts";
 export * as log from "std/log/mod.ts";
 export * as path from "std/path/mod.ts";
-export { format as dFormat } from "std/fmt/duration.ts";
 
 export { Buffer } from "node:buffer";
 export { createWriteStream } from "node:fs";

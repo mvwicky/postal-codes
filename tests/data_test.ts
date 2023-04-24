@@ -1,6 +1,6 @@
 import { assertNotEquals } from "../dev_deps.ts";
-import { loadCountryData } from "./data.ts";
-import { setupLogging } from "./log.ts";
+import { loadCountryData } from "../src/data.ts";
+import { setupLogging } from "../src/log.ts";
 
 Deno.test(
   "load data",

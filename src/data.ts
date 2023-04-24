@@ -8,46 +8,10 @@ import {
 } from "../deps.ts";
 
 import { getConfig } from "./config.ts";
-import { logger } from "./log.ts";
-import {
-  GEO_COLUMNS,
-  type GeoName,
-  GeoNameSchema,
-  type ZIPEntry,
-  ZIPEntrySchema,
-} from "./schemas.ts";
 import { COUNTRIES, type Country, type CountryData } from "./countries.ts";
+import { logger } from "./log.ts";
+import { GEO_COLUMNS, type GeoName, GeoNameSchema } from "./schemas.ts";
 import * as zip from "./zipfiles.ts";
-
-function toZIPEntry(inp: Record<string, unknown>): ZIPEntry | null {
-  const result = ZIPEntrySchema.safeParse(inp);
-  if (result.success) {
-    return result.data;
-  } else {
-    logger().debug(`parse failed: ${result.error}`);
-    return null;
-  }
-}
-
-async function loadZIPs(filePath: string): Promise<Map<string, ZIPEntry>> {
-  const entryMap = new Map<string, ZIPEntry>();
-  const file = await Deno.open(filePath, { read: true });
-  const rows = file.readable
-    .pipeThrough(new TextDecoderStream("utf-8"))
-    .pipeThrough(new csv.CsvParseStream({ skipFirstRow: true }));
-  let [total, failed] = [0, 0];
-  for await (const elem of rows) {
-    total += 1;
-    const entry = toZIPEntry(elem);
-    if (entry) {
-      entryMap.set(entry.zip, entry);
-    } else {
-      failed += 1;
-    }
-  }
-  logger().info(`${failed} failures out of ${total} total rows`);
-  return entryMap;
-}
 
 function loadCountryDataWorker(
   country: Country,
@@ -84,8 +48,7 @@ function loadCountryDataWorker(
 async function fetchCountryData(url: URL): Promise<Buffer | null> {
   const res = await fetch(url, { cache: "default" });
   if (res.ok && res.body) {
-    const aBuf = await res.arrayBuffer();
-    return Buffer.from(aBuf);
+    return Buffer.from(await res.arrayBuffer());
   }
   return null;
 }
@@ -123,11 +86,10 @@ async function extractCountryData(
   });
 }
 
-async function parseCountryData(
-  dataFileName: string,
-): Promise<Map<string, GeoName>> {
-  const geoNames = new Map<string, GeoName>();
-  const file = await Deno.open(dataFileName, { read: true });
+async function* parseCountryData(
+  dataFile: string,
+): AsyncGenerator<[string, GeoName]> {
+  const file = await Deno.open(dataFile, { read: true });
   const rows = file.readable
     .pipeThrough(new TextDecoderStream("utf-8"))
     .pipeThrough(
@@ -143,18 +105,17 @@ async function parseCountryData(
     const res = GeoNameSchema.safeParse(elem);
     if (res.success) {
       const key = res.data.postal_code.toLocaleUpperCase().replace(/\s/g, "");
-      geoNames.set(key, res.data);
+      yield [key, res.data];
     } else {
       failed += 1;
     }
   }
   logger().info(`${failed} failures out of ${total} total rows`);
-  return geoNames;
 }
 
-async function doLoadCountryData(
+async function getDataFile(
   { url, dataFileName }: CountryData,
-): Promise<Map<string, GeoName> | null> {
+): Promise<string | null> {
   const log = logger();
   const cfg = await getConfig();
   const dataDir = path.resolve(Deno.cwd(), cfg.dataDir);
@@ -170,21 +131,31 @@ async function doLoadCountryData(
     log.info(`Fetching file from ${url.href} (dest: ${dataFilePath})`);
     const buf = await fetchCountryData(url);
     if (buf) {
-      const res = await extractCountryData(buf, dataFileName, dataFilePath);
-      if (res) {
-        log.info(`Sucessfully created file.`);
-        const data = await parseCountryData(dataFilePath);
-        return data;
-      } else {
-        return null;
-      }
+      return extractCountryData(buf, dataFileName, dataFilePath);
     }
   } else {
     log.info(`File already exists.`);
-    const data = await parseCountryData(dataFilePath);
-    return data;
   }
-  return null;
+  return dataFilePath;
+}
+
+async function* streamCountryData(
+  { url, dataFileName }: CountryData,
+): AsyncGenerator<[string, GeoName]> {
+  const dataFilePath = await getDataFile({ url, dataFileName });
+  if (dataFilePath) {
+    yield* parseCountryData(dataFilePath);
+  }
+}
+
+async function doLoadCountryData(
+  { url, dataFileName }: CountryData,
+): Promise<Map<string, GeoName> | null> {
+  const data = new Map<string, GeoName>();
+  for await (const [key, entry] of streamCountryData({ url, dataFileName })) {
+    data.set(key, entry);
+  }
+  return data.size ? data : null;
 }
 
 async function loadCountryData(
@@ -192,11 +163,7 @@ async function loadCountryData(
   timeout?: number,
 ): Promise<Map<string, GeoName> | null> {
   const c = COUNTRIES.get(country);
-  if (c) {
-    const countryData = await doLoadCountryData(c);
-    return countryData;
-  }
-  return null;
+  return c ? doLoadCountryData(c) : null;
 }
 
-export { loadCountryData, loadZIPs, toZIPEntry };
+export { loadCountryData };
