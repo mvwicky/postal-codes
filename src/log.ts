@@ -1,21 +1,10 @@
-import { log } from "../deps.ts";
+import { type ConsolaInstance, createConsola } from "../deps.ts";
 
-export function logger() {
-  return log.getLogger("postal-codes");
-}
+let _log: ConsolaInstance | undefined;
 
-export function setupLogging() {
-  log.setup({
-    handlers: {
-      console: new log.handlers.ConsoleHandler("INFO"),
-      // file: new log.handlers.RotatingFileHandler("DEBUG", {
-      //   filename: "logs/log.log",
-      //   maxBytes: 10485760,
-      //   maxBackupCount: 5,
-      // }),
-    },
-    loggers: {
-      "postal-codes": { level: "DEBUG", handlers: [/* "file",*/ "console"] },
-    },
-  });
+export function logger(): ConsolaInstance {
+  if (!_log) {
+    _log = createConsola({});
+  }
+  return _log;
 }

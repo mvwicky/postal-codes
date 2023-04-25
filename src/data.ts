@@ -1,5 +1,6 @@
 import {
   Buffer,
+  type ConsolaInstance,
   createWriteStream,
   csv,
   ensureDir,
@@ -8,13 +9,13 @@ import {
 } from "../deps.ts";
 
 import { getConfig } from "./config.ts";
-import { COUNTRIES, type Country, type CountryData } from "./countries.ts";
+import { COUNTRIES, type CountryData } from "./countries.ts";
 import { logger } from "./log.ts";
 import { GEO_COLUMNS, type GeoName, GeoNameSchema } from "./schemas.ts";
 import * as zip from "./zipfiles.ts";
 
 function loadCountryDataWorker(
-  country: Country,
+  country: string,
   timeout: number,
 ): Promise<Map<string, GeoName> | null> {
   const p = new Promise<Map<string, GeoName> | null>((resolve) => {
@@ -43,6 +44,28 @@ function loadCountryDataWorker(
     }, timeout);
   });
   return p;
+}
+
+class DataLoader {
+  readonly #name: string;
+  readonly #url: URL;
+  readonly #dataFileName: string;
+  readonly #log: ConsolaInstance;
+
+  constructor(country: string, { url, dataFileName }: CountryData) {
+    this.#name = country;
+    this.#url = url;
+    this.#dataFileName = dataFileName;
+    this.#log = logger();
+  }
+
+  private async fetch(): Promise<Buffer | null> {
+    const res = await fetch(this.#url, { cache: "default" });
+    if (res.ok && res.body) {
+      return Buffer.from(await res.arrayBuffer());
+    }
+    return null;
+  }
 }
 
 async function fetchCountryData(url: URL): Promise<Buffer | null> {

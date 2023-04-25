@@ -5,10 +5,6 @@
     "cli": "deno run --allow-read --allow-write --allow-net --allow-env --allow-sys cli.ts"
   },
   "imports": {
-    "std/": "https://deno.land/std@0.183.0/",
-    "zod": "https://deno.land/x/zod@v3.21.4/mod.ts",
-    "c12": "npm:c12@1.4.1",
-    "oak": "https://deno.land/x/oak@v12.2.0/mod.ts",
-    "yauzl": "npm:yauzl@2.10.0"
+    "std/": "https://deno.land/std@0.184.0/"
   }
 }

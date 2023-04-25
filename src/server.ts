@@ -1,7 +1,7 @@
-import { oak } from "../deps.ts";
+import { bFormat, oak } from "../deps.ts";
 import { loadCountryData } from "./data.ts";
 import { hDist } from "./distance.ts";
-import { logger, setupLogging } from "./log.ts";
+import { logger } from "./log.ts";
 import { type GeoName } from "./schemas.ts";
 
 const data = new Map<string, Map<string, GeoName>>();
@@ -59,24 +59,27 @@ const r = new oak.Router().use(
   router.allowedMethods(),
 );
 const app = new oak.Application();
-
 app.use(async (ctx, next) => {
   logger().info(`${ctx.request.method} ${ctx.request.url}`);
   await next();
-});
-
-app.use(async (ctx, next) => {
+}).use(async (ctx, next) => {
   const start = performance.now();
   await next();
   const elapsed = performance.now() - start;
   ctx.response.headers.set("X-Response-Time", elapsed.toFixed(3));
-});
-
-app.use(r.routes());
-app.use(r.allowedMethods());
+}).use(async (_ctx, next) => {
+  const startUsage = Deno.memoryUsage();
+  await next();
+  const endUsage = Deno.memoryUsage();
+  const log = logger();
+  log.info(`RSS Delta: ${bFormat(endUsage.rss - startUsage.rss)}`);
+  log.info(
+    `Heap Used Delta: ${bFormat(endUsage.heapUsed - startUsage.heapUsed)}`,
+  );
+  log.info("Memory Usage: ", endUsage);
+}).use(r.routes()).use(r.allowedMethods());
 
 app.addEventListener("listen", ({ hostname, port, secure }) => {
-  setupLogging();
   const scheme = `http${secure ? "s" : ""}`;
   logger().info(
     `Listening on ${scheme}://${hostname ?? "localhost"}:${port}`,

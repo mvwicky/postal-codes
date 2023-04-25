@@ -1,14 +1,12 @@
-/// <reference types="npm:@types/node" />
-
 import { bFormat, dFormat } from "./deps.ts";
 import { loadCountryData } from "./src/data.ts";
 import { hDist, type Point } from "./src/distance.ts";
-import { logger, setupLogging } from "./src/log.ts";
+import { logger } from "./src/log.ts";
 
 async function lookup(args: string[]) {
   const log = logger();
   if (args.length < 2) {
-    log.warning("Two ZIP codes required.");
+    log.warn("Two ZIP codes required.");
     Deno.exit(1);
   }
   let country = "US";
@@ -18,7 +16,7 @@ async function lookup(args: string[]) {
   const startUsage = Deno.memoryUsage();
   const entryMap = await loadCountryData(country);
   if (!entryMap) {
-    log.warning(`Unable to load data. (country: ${country})`);
+    log.warn(`Unable to load data. (country: ${country})`);
     Deno.exit(1);
   }
   const endUsage = Deno.memoryUsage();
@@ -59,17 +57,16 @@ const COMMANDS = new Map<string, (args: string[]) => Promise<unknown>>([[
 
 if (import.meta.main) {
   const start = performance.now();
-  setupLogging();
   const log = logger();
   if (Deno.args.length < 1) {
-    log.warning(`No command given.`);
+    log.warn(`No command given.`);
     Deno.exit(1);
   }
   const cmd = Deno.args[0];
   const cmdFunction = COMMANDS.get(cmd);
   if (!cmdFunction) {
-    log.warning(`Unkown command "${cmd}".`);
-    log.warning(`Command must be one of: ${[...COMMANDS.keys()].join(", ")}.`);
+    log.warn(`Unkown command "${cmd}".`);
+    log.warn(`Command must be one of: ${[...COMMANDS.keys()].join(", ")}.`);
     Deno.exit(1);
   }
   await cmdFunction(Deno.args.slice(1));
