@@ -47,7 +47,7 @@ async function distance(args: string[]) {
   }
 }
 
-async function populateDB(args: string[]) {
+async function populateDB() {
 }
 
 const COMMANDS = new Map<string, (args: string[]) => Promise<unknown>>([[
