@@ -3,14 +3,13 @@ import { loadCountryData } from "./data.ts";
 import { hDist } from "./distance.ts";
 import { logger } from "./log.ts";
 import { type GeoName } from "./schemas.ts";
+import { normKey, toPoint } from "./utils.ts";
 
 const data = new Map<string, Map<string, GeoName>>();
 
-const cleanCode = (code: string) => code.toLocaleUpperCase();
-
 const router = new oak.Router();
 router.get("/info/:country/:code/", async (ctx) => {
-  const country = ctx.params.country.toLocaleUpperCase();
+  const country = normKey(ctx.params.country);
   let countryData = data.get(country);
   if (!countryData) {
     const newData = await loadCountryData(country);
@@ -19,14 +18,14 @@ router.get("/info/:country/:code/", async (ctx) => {
       countryData = newData;
     }
   }
-  const code = ctx.params.code.toLocaleUpperCase();
+  const code = normKey(ctx.params.code);
   const codeInfo = countryData?.get(code);
   if (codeInfo) {
     ctx.response.type = "application/json";
     ctx.response.body = JSON.stringify(codeInfo);
   }
 }).get("/distance/:country/:start/:end/", async (ctx) => {
-  const country = ctx.params.country.toLocaleUpperCase();
+  const country = normKey(ctx.params.country);
   let countryData = data.get(country);
   if (!countryData) {
     const newData = await loadCountryData(country);
@@ -35,21 +34,14 @@ router.get("/info/:country/:code/", async (ctx) => {
       countryData = newData;
     }
   }
-  const start = cleanCode(ctx.params.start);
-  const startInfo = countryData?.get(start);
-  const end = cleanCode(ctx.params.end);
-  const endInfo = countryData?.get(end);
-  if (startInfo && endInfo) {
+  const startCode = normKey(ctx.params.start);
+  const start = countryData?.get(startCode);
+  const endCode = normKey(ctx.params.end);
+  const end = countryData?.get(endCode);
+  if (start && end) {
     ctx.response.type = "application/json";
-    const distance = hDist([startInfo.latitude, startInfo.longitude], [
-      endInfo.latitude,
-      endInfo.longitude,
-    ]);
-    ctx.response.body = JSON.stringify({
-      start: startInfo,
-      end: endInfo,
-      distance: distance,
-    });
+    const distance = hDist(toPoint(start), toPoint(end));
+    ctx.response.body = JSON.stringify({ start, end, distance });
   }
 });
 

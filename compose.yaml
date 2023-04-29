@@ -1,0 +1,33 @@
+version: "3"
+services:
+  web:
+    build:
+      context: "."
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    networks:
+      - net
+    hostname: web
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres
+    restart: always
+    user: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postal_codes_db
+    expose:
+      - 5432
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+networks:
+  net:
+volumes:
+  db-data:

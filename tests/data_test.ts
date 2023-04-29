@@ -1,20 +1,18 @@
 import { assertNotEquals } from "../dev_deps.ts";
 import { loadCountryData } from "../src/data.ts";
-import { setupLogging } from "../src/log.ts";
 
 Deno.test(
-  "load data",
+  "load",
   {
-    permissions: { net: true, read: true, write: true, env: true },
+    permissions: { net: true, read: true, write: true, env: true, sys: true },
     sanitizeResources: false,
   },
   async (t) => {
-    setupLogging();
-    await t.step("US", async () => {
+    await t.step("US data", async () => {
       const data = await loadCountryData("US", 5000);
       assertNotEquals(data?.size ?? 0, 0);
     });
-    await t.step("CA", async () => {
+    await t.step("CA data", async () => {
       const data = await loadCountryData("CA", 5000);
       assertNotEquals(data?.size ?? 0, 0);
     });

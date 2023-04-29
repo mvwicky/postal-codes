@@ -12,6 +12,7 @@ import { getConfig } from "./config.ts";
 import { COUNTRIES, type CountryData } from "./countries.ts";
 import { logger } from "./log.ts";
 import { GEO_COLUMNS, type GeoName, GeoNameSchema } from "./schemas.ts";
+import { normKey } from "./utils.ts";
 import * as zip from "./zipfiles.ts";
 
 function loadCountryDataWorker(
@@ -66,6 +67,12 @@ class DataLoader {
     }
     return null;
   }
+
+  private async extract(buf: Buffer) {
+  }
+
+  private async parse() {
+  }
 }
 
 async function fetchCountryData(url: URL): Promise<Buffer | null> {
@@ -114,7 +121,7 @@ async function* parseCountryData(
 ): AsyncGenerator<[string, GeoName]> {
   const file = await Deno.open(dataFile, { read: true });
   const rows = file.readable
-    .pipeThrough(new TextDecoderStream("utf-8"))
+    .pipeThrough(new TextDecoderStream())
     .pipeThrough(
       new csv.CsvParseStream({
         skipFirstRow: false,
@@ -127,7 +134,7 @@ async function* parseCountryData(
     total += 1;
     const res = GeoNameSchema.safeParse(elem);
     if (res.success) {
-      const key = res.data.postal_code.toLocaleUpperCase().replace(/\s/g, "");
+      const key = normKey(res.data.postal_code);
       yield [key, res.data];
     } else {
       failed += 1;
@@ -137,7 +144,7 @@ async function* parseCountryData(
 }
 
 async function getDataFile(
-  { url, dataFileName }: CountryData,
+  cData: CountryData,
 ): Promise<string | null> {
   const log = logger();
   const cfg = await getConfig();
@@ -147,14 +154,14 @@ async function getDataFile(
     log.info(`Creating data directory (${dataDir})`);
     await ensureDir(dataDir);
   }
-  const dataFilePath = path.join(dataDir, dataFileName);
+  const dataFilePath = path.join(dataDir, cData.outputFileName);
   log.info(`Data file path: ${dataFilePath}`);
   const fileExists = await exists(dataFilePath, { isFile: true });
   if (!fileExists) {
-    log.info(`Fetching file from ${url.href} (dest: ${dataFilePath})`);
-    const buf = await fetchCountryData(url);
+    log.info(`Fetching file from ${cData.url.href} (dest: ${dataFilePath})`);
+    const buf = await fetchCountryData(cData.url);
     if (buf) {
-      return extractCountryData(buf, dataFileName, dataFilePath);
+      return extractCountryData(buf, cData.dataFileName, dataFilePath);
     }
   } else {
     log.info(`File already exists.`);
@@ -163,19 +170,19 @@ async function getDataFile(
 }
 
 async function* streamCountryData(
-  { url, dataFileName }: CountryData,
+  cData: CountryData,
 ): AsyncGenerator<[string, GeoName]> {
-  const dataFilePath = await getDataFile({ url, dataFileName });
+  const dataFilePath = await getDataFile(cData);
   if (dataFilePath) {
     yield* parseCountryData(dataFilePath);
   }
 }
 
 async function doLoadCountryData(
-  { url, dataFileName }: CountryData,
+  cData: CountryData,
 ): Promise<Map<string, GeoName> | null> {
   const data = new Map<string, GeoName>();
-  for await (const [key, entry] of streamCountryData({ url, dataFileName })) {
+  for await (const [key, entry] of streamCountryData(cData)) {
     data.set(key, entry);
   }
   return data.size ? data : null;

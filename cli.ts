@@ -2,6 +2,7 @@ import { bFormat, dFormat } from "./deps.ts";
 import { loadCountryData } from "./src/data.ts";
 import { hDist, type Point } from "./src/distance.ts";
 import { logger } from "./src/log.ts";
+import { toPoint } from "./src/utils.ts";
 
 async function lookup(args: string[]) {
   const log = logger();
@@ -34,8 +35,7 @@ async function lookup(args: string[]) {
     log.error(`Unable to find ZIP code ${zip2}`);
   }
   if (z1 && z2) {
-    const p1: Point = [z1.latitude, z1.longitude];
-    const p2: Point = [z2.latitude, z2.longitude];
+    const [p1, p2] = [toPoint(z1), toPoint(z2)];
     log.info(`${z1.postal_code} -> (${p1[0]}, ${p1[1]})`);
     log.info(`${z2.postal_code} -> (${p2[0]}, ${p2[1]})`);
     const d = hDist(p1, p2);

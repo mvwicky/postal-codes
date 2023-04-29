@@ -12,10 +12,11 @@ CREATE TABLE geo (
   admin_code_2 TEXT NOT NULL,
   admin_name_3 TEXT NOT NULL,
   admin_code_3 TEXT NOT NULL,
-  latitude INTEGER NOT NULL,
-  longitude INTEGER NOT NULL,
+  latitude REAL NOT NULL,
+  longitude REAL NOT NULL,
   accuracy INTEGER NOT NULL,
   UNIQUE (country_code, postal_code)
 );
 
 CREATE INDEX geo_postal_code ON geo (postal_code);
+CREATE INDEX geo_cc_postal_code ON geo (country_code, postal_code);

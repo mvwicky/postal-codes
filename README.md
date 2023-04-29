@@ -13,6 +13,8 @@ Where I figure out postal code parsing.
 
 - [US](./data/US/US.txt)
 - [CA](./data/CA/CA.txt)
+    - Also [CA full](./data/CA_full.txt)
+    - The CA.txt file contains entries for three character postal codes
 
 #### Format
 
