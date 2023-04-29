@@ -34,7 +34,7 @@ rm-container:
 cache-deps: deno.lock
 
 deno.lock: deno.jsonc $(DEPS_FILES)
-	$(DENO) cache $(DEPS_FILES)
+	$(DENO) cache --lock-write $(DEPS_FILES)
 
 reload-deps:
 	$(DENO) cache --lock-write --reload $(DEPS_FILES)

@@ -5,6 +5,6 @@
     "cli": "deno run --allow-read --allow-write --allow-net --allow-env --allow-sys cli.ts"
   },
   "imports": {
-    "std/": "https://deno.land/std@0.184.0/"
+    "std/": "https://deno.land/std@0.185.0/"
   }
 }
