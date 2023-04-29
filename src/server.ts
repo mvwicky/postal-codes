@@ -5,10 +5,13 @@ import { logger } from "./log.ts";
 import { type GeoName } from "./schemas.ts";
 import { normKey, toPoint } from "./utils.ts";
 
+type InfoParams = { country: string; code: string };
+type DistParams = { country: string; start: string; end: string };
+
 const data = new Map<string, Map<string, GeoName>>();
 
 const router = new oak.Router();
-router.get("/info/:country/:code/", async (ctx) => {
+router.get<InfoParams>("/info/:code/", async (ctx) => {
   const country = normKey(ctx.params.country);
   let countryData = data.get(country);
   if (!countryData) {
@@ -24,7 +27,7 @@ router.get("/info/:country/:code/", async (ctx) => {
     ctx.response.type = "application/json";
     ctx.response.body = JSON.stringify(codeInfo);
   }
-}).get("/distance/:country/:start/:end/", async (ctx) => {
+}).get<DistParams>("/distance/:start/:end/", async (ctx) => {
   const country = normKey(ctx.params.country);
   let countryData = data.get(country);
   if (!countryData) {
@@ -46,7 +49,7 @@ router.get("/info/:country/:code/", async (ctx) => {
 });
 
 const r = new oak.Router().use(
-  "/api",
+  "/api/:country",
   router.routes(),
   router.allowedMethods(),
 );
@@ -58,7 +61,7 @@ app.use(async (ctx, next) => {
   const start = performance.now();
   await next();
   const elapsed = performance.now() - start;
-  ctx.response.headers.set("X-Response-Time", elapsed.toFixed(3));
+  ctx.response.headers.set("X-Response-Time", elapsed.toFixed(1));
 }).use(async (_ctx, next) => {
   const startUsage = Deno.memoryUsage();
   await next();

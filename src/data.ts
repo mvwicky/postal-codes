@@ -49,21 +49,22 @@ function loadCountryDataWorker(
 
 class DataLoader {
   readonly #name: string;
-  readonly #url: URL;
-  readonly #dataFileName: string;
+  readonly #cData: CountryData;
   readonly #log: ConsolaInstance;
 
-  constructor(country: string, { url, dataFileName }: CountryData) {
+  constructor(country: string, cData: CountryData) {
     this.#name = country;
-    this.#url = url;
-    this.#dataFileName = dataFileName;
-    this.#log = logger();
+    this.#cData = cData;
+    this.#log = logger().withTag(this.#name);
   }
 
   private async fetch(): Promise<Buffer | null> {
-    const res = await fetch(this.#url, { cache: "default" });
+    this.#log.info(`Fetching country data ${this.#name}`);
+    const res = await fetch(this.#cData.url, { cache: "default" });
     if (res.ok && res.body) {
       return Buffer.from(await res.arrayBuffer());
+    } else {
+      this.#log.warn(`Fetch error: "${res.statusText}"`);
     }
     return null;
   }

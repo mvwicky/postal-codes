@@ -1,10 +1,10 @@
 import { bFormat, dFormat } from "./deps.ts";
 import { loadCountryData } from "./src/data.ts";
-import { hDist, type Point } from "./src/distance.ts";
+import { hDist } from "./src/distance.ts";
 import { logger } from "./src/log.ts";
 import { toPoint } from "./src/utils.ts";
 
-async function lookup(args: string[]) {
+async function distance(args: string[]) {
   const log = logger();
   if (args.length < 2) {
     log.warn("Two ZIP codes required.");
@@ -51,8 +51,8 @@ async function populateDB(args: string[]) {
 }
 
 const COMMANDS = new Map<string, (args: string[]) => Promise<unknown>>([[
-  "lookup",
-  lookup,
+  "distance",
+  distance,
 ], ["populate-db", populateDB]]);
 
 if (import.meta.main) {
