@@ -1,5 +1,5 @@
-import { Head } from "$fresh/runtime.ts";
-import Info from "../islands/Info.tsx";
+import { Head } from "~/deps.ts";
+import Info from "~/islands/Info.tsx";
 
 export default function Home() {
   return (
@@ -8,9 +8,7 @@ export default function Home() {
         <title>Postal Codes</title>
       </Head>
       <div class="p-4 mx-auto max-w-screen-md">
-        <p class="my-6">
-          Postal Codes
-        </p>
+        <p class="my-6">Postal Codes</p>
         <Info start={0} />
       </div>
     </>

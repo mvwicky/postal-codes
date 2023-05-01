@@ -2,25 +2,15 @@ import { bFormat, oak } from "../deps.ts";
 import { loadCountryData } from "./data.ts";
 import { hDist } from "./distance.ts";
 import { logger } from "./log.ts";
-import { type GeoName } from "./schemas.ts";
 import { normKey, toPoint } from "./utils.ts";
 
 type InfoParams = { country: string; code: string };
 type DistParams = { country: string; start: string; end: string };
 
-const data = new Map<string, Map<string, GeoName>>();
-
 const router = new oak.Router();
 router.get<InfoParams>("/info/:code/", async (ctx) => {
   const country = normKey(ctx.params.country);
-  let countryData = data.get(country);
-  if (!countryData) {
-    const newData = await loadCountryData(country);
-    if (newData) {
-      data.set(country, newData);
-      countryData = newData;
-    }
-  }
+  const countryData = await loadCountryData(country);
   const code = normKey(ctx.params.code);
   const codeInfo = countryData?.get(code);
   if (codeInfo) {
@@ -29,14 +19,7 @@ router.get<InfoParams>("/info/:code/", async (ctx) => {
   }
 }).get<DistParams>("/distance/:start/:end/", async (ctx) => {
   const country = normKey(ctx.params.country);
-  let countryData = data.get(country);
-  if (!countryData) {
-    const newData = await loadCountryData(country);
-    if (newData) {
-      data.set(country, newData);
-      countryData = newData;
-    }
-  }
+  const countryData = await loadCountryData(country);
   const startCode = normKey(ctx.params.start);
   const start = countryData?.get(startCode);
   const endCode = normKey(ctx.params.end);

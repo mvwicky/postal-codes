@@ -15,6 +15,8 @@ import { GEO_COLUMNS, type GeoName, GeoNameSchema } from "./schemas.ts";
 import { normKey } from "./utils.ts";
 import * as zip from "./zipfiles.ts";
 
+const cache = new Map<string, Map<string, GeoName>>();
+
 function loadCountryDataWorker(
   country: string,
   timeout: number,
@@ -191,10 +193,24 @@ async function doLoadCountryData(
 
 async function loadCountryData(
   country: string,
-  timeout?: number,
+  { forceReload }: { timeout?: number; forceReload?: boolean } = {},
 ): Promise<Map<string, GeoName> | null> {
+  if (forceReload) {
+    cache.delete(country);
+  }
+  const cachedData = cache.get(country);
+  if (cachedData) {
+    return cachedData;
+  }
   const c = COUNTRIES.get(country);
-  return c ? doLoadCountryData(c) : null;
+  if (c) {
+    const data = await doLoadCountryData(c);
+    if (data) {
+      cache.set(country, data);
+    }
+    return data;
+  }
+  return null;
 }
 
 export { loadCountryData };

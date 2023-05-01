@@ -9,4 +9,4 @@ RUN deno cache deps.ts
 COPY src /app/src
 COPY serve.ts /app
 
-CMD ["run", "--allow-read", "--allow-write", "--allow-net", "--allow-env", "--allow-sys", "serve.ts"]
+CMD ["run", "-A", "main.ts"]

@@ -1,14 +1,21 @@
-import { HandlerContext } from "$fresh/server.ts";
-import { normKey } from "../../../../src/utils.ts";
-normKey;
+import { HandlerContext } from "~/deps.ts";
+import { loadCountryData } from "~/src/data.ts";
+import { normKey } from "~/src/utils.ts";
 
-export const handler = (
+export const handler = async (
   _req: Request,
   { params }: HandlerContext,
-): Response => {
-  const code = normKey(params.code);
+): Promise<Response> => {
   const country = normKey(params.country);
-  return new Response(`${JSON.stringify({ code, country })}`, {
-    headers: [["Content-Type", "application/json"]],
+  const code = normKey(params.code);
+  const data = await loadCountryData(country);
+  const info = data?.get(code);
+  if (info) {
+    return new Response(JSON.stringify(info), {
+      headers: [["Content-Type", "application/json"]],
+    });
+  }
+  return new Response(`Code not found ${code} (${country})`, {
+    status: 404,
   });
 };
