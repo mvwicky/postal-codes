@@ -9,13 +9,20 @@ import {
 } from "../deps.ts";
 
 import { getConfig } from "./config.ts";
-import { COUNTRIES, type CountryData } from "./countries.ts";
+import { COUNTRIES, type CountryParams } from "./countries.ts";
 import { logger } from "./log.ts";
 import { GEO_COLUMNS, type GeoName, GeoNameSchema } from "./schemas.ts";
 import { normKey } from "./utils.ts";
 import * as zip from "./zipfiles.ts";
 
-const cache = new Map<string, Map<string, GeoName>>();
+type CacheType = Map<string, Map<string, GeoName>>;
+type LoadOptions = {
+  timeout?: number;
+  forceReload: boolean;
+  cache?: CacheType;
+};
+
+const defaultCache = new Map<string, Map<string, GeoName>>();
 
 function loadCountryDataWorker(
   country: string,
@@ -51,22 +58,40 @@ function loadCountryDataWorker(
 
 class DataLoader {
   readonly #name: string;
-  readonly #cData: CountryData;
+  readonly #params: CountryParams;
   readonly #log: ConsolaInstance;
+  readonly #options: LoadOptions;
 
-  constructor(country: string, cData: CountryData) {
+  constructor(
+    country: string,
+    params: CountryParams,
+    options: Partial<LoadOptions> = {},
+  ) {
     this.#name = country;
-    this.#cData = cData;
+    this.#params = params;
     this.#log = logger().withTag(this.#name);
+    this.#options = { forceReload: false, ...options };
+  }
+
+  static create(): DataLoader | null {
+    return null;
   }
 
   private async fetch(): Promise<Buffer | null> {
+    const { timeout } = this.#options;
+    const signal = timeout !== undefined
+      ? AbortSignal.timeout(timeout)
+      : undefined;
     this.#log.info(`Fetching country data ${this.#name}`);
-    const res = await fetch(this.#cData.url, { cache: "default" });
-    if (res.ok && res.body) {
-      return Buffer.from(await res.arrayBuffer());
-    } else {
-      this.#log.warn(`Fetch error: "${res.statusText}"`);
+    try {
+      const res = await fetch(this.#params.url, { signal });
+      if (res.ok && res.body) {
+        return Buffer.from(await res.arrayBuffer());
+      } else {
+        this.#log.warn(`Fetch error: "${res.statusText}"`);
+      }
+    } catch (err) {
+      this.#log.warn(`Fetch error: ${err}`);
     }
     return null;
   }
@@ -147,7 +172,7 @@ async function* parseCountryData(
 }
 
 async function getDataFile(
-  cData: CountryData,
+  params: CountryParams,
 ): Promise<string | null> {
   const log = logger();
   const cfg = await getConfig();
@@ -157,14 +182,14 @@ async function getDataFile(
     log.info(`Creating data directory (${dataDir})`);
     await ensureDir(dataDir);
   }
-  const dataFilePath = path.join(dataDir, cData.outputFileName);
+  const dataFilePath = path.join(dataDir, params.outputFileName);
   log.info(`Data file path: ${dataFilePath}`);
   const fileExists = await exists(dataFilePath, { isFile: true });
   if (!fileExists) {
-    log.info(`Fetching file from ${cData.url.href} (dest: ${dataFilePath})`);
-    const buf = await fetchCountryData(cData.url);
+    log.info(`Fetching file from ${params.url.href} (dest: ${dataFilePath})`);
+    const buf = await fetchCountryData(params.url);
     if (buf) {
-      return extractCountryData(buf, cData.dataFileName, dataFilePath);
+      return extractCountryData(buf, params.dataFileName, dataFilePath);
     }
   } else {
     log.info(`File already exists.`);
@@ -173,19 +198,19 @@ async function getDataFile(
 }
 
 async function* streamCountryData(
-  cData: CountryData,
+  params: CountryParams,
 ): AsyncGenerator<[string, GeoName]> {
-  const dataFilePath = await getDataFile(cData);
+  const dataFilePath = await getDataFile(params);
   if (dataFilePath) {
     yield* parseCountryData(dataFilePath);
   }
 }
 
 async function doLoadCountryData(
-  cData: CountryData,
+  params: CountryParams,
 ): Promise<Map<string, GeoName> | null> {
   const data = new Map<string, GeoName>();
-  for await (const [key, entry] of streamCountryData(cData)) {
+  for await (const [key, entry] of streamCountryData(params)) {
     data.set(key, entry);
   }
   return data.size ? data : null;
@@ -193,20 +218,20 @@ async function doLoadCountryData(
 
 async function loadCountryData(
   country: string,
-  { forceReload }: { timeout?: number; forceReload?: boolean } = {},
+  { forceReload }: Partial<LoadOptions> = {},
 ): Promise<Map<string, GeoName> | null> {
   if (forceReload) {
-    cache.delete(country);
+    defaultCache.delete(country);
   }
-  const cachedData = cache.get(country);
+  const cachedData = defaultCache.get(country);
   if (cachedData) {
     return cachedData;
   }
-  const c = COUNTRIES.get(country);
-  if (c) {
-    const data = await doLoadCountryData(c);
+  const params = COUNTRIES.get(country);
+  if (params) {
+    const data = await doLoadCountryData(params);
     if (data) {
-      cache.set(country, data);
+      defaultCache.set(country, data);
     }
     return data;
   }

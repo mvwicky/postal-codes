@@ -1,5 +1,5 @@
-import { Options } from "$fresh/plugins/twind.ts";
+import { type TwindPluginOptions } from "./deps.ts";
 
 export default {
   selfURL: import.meta.url,
-} as Options;
+} as TwindPluginOptions;

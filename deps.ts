@@ -3,8 +3,13 @@
 export * as csv from "std/csv/mod.ts";
 export { format as bFormat } from "std/fmt/bytes.ts";
 export { format as dFormat } from "std/fmt/duration.ts";
-export { ensureDir, exists } from "std/fs/mod.ts";
+export { ensureDir } from "std/fs/ensure_dir.ts";
+export { exists } from "std/fs/exists.ts";
 export * as path from "std/path/mod.ts";
+export { walk, type WalkOptions } from "std/fs/walk.ts";
+export { toHashString } from "std/crypto/to_hash_string.ts";
+export { crypto } from "std/crypto/crypto.ts";
+export { readAll } from "std/streams/read_all.ts";
 
 export { Buffer } from "node:buffer";
 export { createWriteStream } from "node:fs";
@@ -24,6 +29,7 @@ export {
 export { default as yauzl } from "npm:yauzl@2.10.0";
 
 export {
+  type AppProps,
   type ErrorPageProps,
   type HandlerContext,
   type Handlers,
@@ -33,3 +39,9 @@ export {
 } from "$fresh/server.ts";
 export { asset, Head } from "$fresh/runtime.ts";
 export { useState } from "preact/hooks";
+export { start } from "$fresh/server.ts";
+export { default as devStart } from "$fresh/dev.ts";
+export {
+  default as twindPlugin,
+  type Options as TwindPluginOptions,
+} from "$fresh/plugins/twind.ts";

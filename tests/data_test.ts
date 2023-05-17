@@ -9,11 +9,11 @@ Deno.test(
   },
   async (t) => {
     await t.step("US data", async () => {
-      const data = await loadCountryData("US", 5000);
+      const data = await loadCountryData("US", { forceReload: true });
       assertNotEquals(data?.size ?? 0, 0);
     });
     await t.step("CA data", async () => {
-      const data = await loadCountryData("CA", 5000);
+      const data = await loadCountryData("CA", { forceReload: true });
       assertNotEquals(data?.size ?? 0, 0);
     });
   },

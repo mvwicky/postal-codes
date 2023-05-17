@@ -2,11 +2,11 @@ FROM denoland/deno:1.33.1
 EXPOSE 8000
 WORKDIR /app
 
-ADD deps.ts deno.json deno.lock /app
+ARG GIT_REVISION
+ENV DENO_DEPLOYMENT_ID=${GIT_REVISION}
 
-RUN deno cache deps.ts
+COPY deps.ts deno.json deno.lock import_map.json /app
+RUN ["deno", "cache", "deps.ts"]
 
-COPY src /app/src
-COPY serve.ts /app
-
+COPY . .
 CMD ["run", "-A", "main.ts"]

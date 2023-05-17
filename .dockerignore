@@ -7,3 +7,5 @@
 data/
 logs/
 Makefile
+sql/
+tests/
