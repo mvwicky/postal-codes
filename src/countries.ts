@@ -1,4 +1,4 @@
-export interface CountryData {
+export interface CountryParams {
   /** Where to fetch the data. */
   url: URL;
   /** The name of the data file within the zip file. */
@@ -9,7 +9,7 @@ export interface CountryData {
 
 const urlPrefix = "https://download.geonames.org/export/zip";
 
-const COUNTRIES: Map<string, Readonly<CountryData>> = new Map(
+const COUNTRIES: Map<string, Readonly<CountryParams>> = new Map(
   [
     [
       "CA",

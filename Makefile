@@ -9,9 +9,9 @@ DENO=deno
 IMG_NAME=postal-codes
 DOCKERFILE=Dockerfile
 
-DEPS_FILES=deps.ts dev_deps.ts
+DEPS_FILES=deps.ts dev_deps.ts dev.ts fresh.gen.ts main.ts twind.config.ts
 CACHE_DEPS_ARGS=$(DEPS_FILES)
-ENTRY_FILES=main.ts cli.ts
+ENTRY_FILES=serve.ts cli.ts
 
 .PHONY: build-image create-container start-container stop-container rm-container \
 	cache-deps reload-deps check
@@ -33,7 +33,7 @@ rm-container:
 
 cache-deps: deno.lock
 
-deno.lock: deno.jsonc $(DEPS_FILES)
+deno.lock: deno.json $(DEPS_FILES)
 	$(DENO) cache --lock-write $(DEPS_FILES)
 
 reload-deps:

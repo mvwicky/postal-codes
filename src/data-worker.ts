@@ -3,8 +3,8 @@
 
 import { Buffer, exists, path } from "../deps.ts";
 import { getConfig } from "./config.ts";
-import { COUNTRIES, type CountryData } from "./countries.ts";
-import { logger, setupLogging } from "./log.ts";
+import { COUNTRIES, type CountryParams } from "./countries.ts";
+import { logger } from "./log.ts";
 import { type GeoName } from "./schemas.ts";
 import * as zip from "./zipfiles.ts";
 
@@ -29,7 +29,7 @@ async function extractCountryData(buf: Buffer, dataFileName: string) {
 }
 
 async function loadCountryData(
-  { url, dataFileName }: CountryData,
+  { url, dataFileName }: CountryParams,
 ): Promise<Map<string, GeoName> | null> {
   const { dataDir } = await getConfig();
   const dataFilePath = path.join(Deno.cwd(), dataDir, dataFileName);
@@ -47,7 +47,6 @@ async function loadCountryData(
   return null;
 }
 
-setupLogging();
 logger().info(`Worker Started.`);
 self.onmessage = async ({ data }) => {
   if (data.method === "load") {
