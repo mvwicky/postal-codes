@@ -2,7 +2,7 @@ FROM denoland/deno:1.33.1
 EXPOSE 8000
 WORKDIR /app
 
-COPY deps.ts deno.json deno.lock /app
+COPY deps.ts deno.jsonc deno.lock /app
 RUN ["deno", "cache", "deps.ts"]
 
 COPY src /app/src
