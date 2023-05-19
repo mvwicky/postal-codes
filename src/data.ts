@@ -1,10 +1,10 @@
 import {
-  Buffer,
   type ConsolaInstance,
   createWriteStream,
   csv,
   ensureDir,
   exists,
+  NodeBuffer,
   path,
 } from "../deps.ts";
 import { getConfig } from "./config.ts";
@@ -65,9 +65,9 @@ class DataLoader {
   readonly #name: string;
   readonly #params: CountryParams;
   readonly #log: ConsolaInstance;
-  readonly #options: LoadOptions;
+  readonly #options: Required<LoadOptions>;
 
-  constructor(
+  private constructor(
     country: string,
     params: CountryParams,
     options: Partial<LoadOptions> = {},
@@ -75,23 +75,38 @@ class DataLoader {
     this.#name = country;
     this.#params = params;
     this.#log = logger().withTag(this.#name);
-    this.#options = { forceReload: false, ...options };
+    this.#options = {
+      forceReload: false,
+      cache: defaultCache,
+      timeout: Infinity,
+      ...options,
+    };
   }
 
-  static create(country: string): DataLoader | null {
+  static async create(
+    country: string,
+    options: Partial<LoadOptions> = {},
+  ): Promise<DataLoader | null> {
+    const cNorm = await checkCountry(country);
+    if (cNorm) {
+      const params = COUNTRIES.get(cNorm);
+      if (params) {
+        return new this(cNorm, params, options);
+      }
+    }
     return null;
   }
 
-  private async fetch(): Promise<Buffer | null> {
+  private async fetch(): Promise<NodeBuffer | null> {
     const { timeout } = this.#options;
-    const signal = timeout !== undefined
+    const signal = Number.isFinite(timeout)
       ? AbortSignal.timeout(timeout)
       : undefined;
     this.#log.info(`Fetching country data ${this.#name}`);
     try {
       const res = await fetch(this.#params.url, { signal });
       if (res.ok && res.body) {
-        return Buffer.from(await res.arrayBuffer());
+        return NodeBuffer.from(await res.arrayBuffer());
       } else {
         this.#log.warn(`Fetch error: "${res.statusText}"`);
       }
@@ -101,23 +116,23 @@ class DataLoader {
     return null;
   }
 
-  private async extract(buf: Buffer) {
+  private async extract(buf: NodeBuffer) {
   }
 
   private async parse() {
   }
 }
 
-async function fetchCountryData(url: URL): Promise<Buffer | null> {
+async function fetchCountryData(url: URL): Promise<NodeBuffer | null> {
   const res = await fetch(url, { cache: "default" });
   if (res.ok && res.body) {
-    return Buffer.from(await res.arrayBuffer());
+    return NodeBuffer.from(await res.arrayBuffer());
   }
   return null;
 }
 
 async function extractCountryData(
-  buf: Buffer,
+  buf: NodeBuffer,
   dataFileName: string,
   dataFilePath: string,
 ) {
@@ -182,11 +197,11 @@ async function getDataFile(
   const log = logger();
   const cfg = await getConfig();
   const dataDir = path.resolve(Deno.cwd(), cfg.dataDir);
-  const dirExists = await exists(dataDir, { isDirectory: true });
-  if (!dirExists) {
-    log.info(`Creating data directory (${dataDir})`);
-    await ensureDir(dataDir);
-  }
+  // const dirExists = await exists(dataDir, { isDirectory: true });
+  await ensureDir(dataDir);
+  // if (!dirExists) {
+  //   log.info(`Creating data directory (${dataDir})`);
+  // }
   const dataFilePath = path.join(dataDir, params.outputFileName);
   log.info(`Data file path: ${dataFilePath}`);
   const fileExists = await exists(dataFilePath, { isFile: true });

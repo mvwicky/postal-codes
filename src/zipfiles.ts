@@ -1,7 +1,7 @@
-import { type Buffer, type Readable, yauzl } from "../deps.ts";
+import { NodeBuffer, type Readable, yauzl } from "../deps.ts";
 
 export function fromBuffer(
-  buf: Buffer,
+  buf: NodeBuffer,
   options: yauzl.Options = {},
 ): Promise<yauzl.ZipFile> {
   return new Promise((resolve, reject) => {

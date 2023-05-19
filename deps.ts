@@ -10,8 +10,9 @@ export { walk, type WalkOptions } from "std/fs/walk.ts";
 export { toHashString } from "std/crypto/to_hash_string.ts";
 export { crypto } from "std/crypto/crypto.ts";
 export { readAll } from "std/streams/read_all.ts";
+export { Status } from "std/http/http_status.ts";
 
-export { Buffer } from "node:buffer";
+export { Buffer as NodeBuffer } from "node:buffer";
 export { createWriteStream } from "node:fs";
 export { type Readable } from "node:stream";
 

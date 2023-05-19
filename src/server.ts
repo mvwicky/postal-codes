@@ -1,12 +1,12 @@
-import { bFormat, oak } from "../deps.ts";
+import { bFormat, oak, Status } from "../deps.ts";
 import { loadCountryData } from "./data.ts";
 import { hDist } from "./distance.ts";
 import { logger } from "./log.ts";
 import { normKey, toPoint } from "./utils.ts";
 
-// type CountryParams = { country: string };
-type InfoParams = { country: string; code: string };
-type DistParams = { country: string; start: string; end: string };
+type CountryParams = { country: string };
+type InfoParams = CountryParams & { code: string };
+type DistParams = CountryParams & { start: string; end: string };
 
 function logMemory(start: Deno.MemoryUsage, end: Deno.MemoryUsage) {
   const log = logger();
@@ -16,21 +16,24 @@ function logMemory(start: Deno.MemoryUsage, end: Deno.MemoryUsage) {
   log.info("Heap Used:   ", bFormat(end.heapUsed));
 }
 
-const router = new oak.Router().get<InfoParams>("/info/:code/", async (ctx) => {
+const countryErrorString = (countryParam: string) =>
+  `Unknown country: ${countryParam}`;
+
+const codeErrorString = (codeParam: string) => `Invalid code: ${codeParam}`;
+
+const router = new oak.Router();
+router.get<InfoParams>("/info/:code/", async (ctx) => {
   const countryData = await loadCountryData(ctx.params.country);
   const code = normKey(ctx.params.code);
   const codeInfo = countryData?.get(code);
-  ctx.response.type = "application/json";
   if (codeInfo) {
-    ctx.response.body = JSON.stringify(codeInfo);
+    ctx.response.body = codeInfo;
   } else if (!countryData) {
-    ctx.response.body = JSON.stringify({
-      error: [`Unknown country: ${ctx.params.country}`],
-    });
+    ctx.response.status = Status.BadRequest;
+    ctx.response.body = { error: [countryErrorString(ctx.params.country)] };
   } else {
-    ctx.response.body = JSON.stringify({
-      error: [`Invalid code: ${ctx.params.code}`],
-    });
+    ctx.response.status = Status.BadRequest;
+    ctx.response.body = { error: [codeErrorString(ctx.params.code)] };
   }
 }).get<DistParams>("/distance/:start/:end/", async (ctx) => {
   const countryData = await loadCountryData(ctx.params.country);
@@ -38,10 +41,22 @@ const router = new oak.Router().get<InfoParams>("/info/:code/", async (ctx) => {
   const endCode = normKey(ctx.params.end);
   const start = countryData?.get(startCode);
   const end = countryData?.get(endCode);
-  ctx.response.type = "application/json";
   if (start && end) {
     const distance = hDist(toPoint(start), toPoint(end));
-    ctx.response.body = JSON.stringify({ start, end, distance });
+    ctx.response.body = { start, end, distance };
+  } else {
+    const error: string[] = [];
+    if (!countryData) {
+      error.push(countryErrorString(ctx.params.country));
+    }
+    if (countryData && !start) {
+      error.push(codeErrorString(ctx.params.start));
+    }
+    if (countryData && !end) {
+      error.push(codeErrorString(ctx.params.end));
+    }
+    ctx.response.status = Status.BadRequest;
+    ctx.response.body = { error };
   }
 });
 
