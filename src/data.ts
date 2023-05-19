@@ -7,7 +7,6 @@ import {
   exists,
   path,
 } from "../deps.ts";
-
 import { getConfig } from "./config.ts";
 import { COUNTRIES, type CountryParams } from "./countries.ts";
 import { logger } from "./log.ts";
@@ -22,7 +21,13 @@ type LoadOptions = {
   cache?: CacheType;
 };
 
-const defaultCache = new Map<string, Map<string, GeoName>>();
+const defaultCache: CacheType = new Map<string, Map<string, GeoName>>();
+
+async function checkCountry(country: string): Promise<string | null> {
+  const { allowedCountries } = await getConfig();
+  const cNorm = normKey(country);
+  return allowedCountries.includes(cNorm) ? cNorm : null;
+}
 
 function loadCountryDataWorker(
   country: string,
@@ -73,7 +78,7 @@ class DataLoader {
     this.#options = { forceReload: false, ...options };
   }
 
-  static create(): DataLoader | null {
+  static create(country: string): DataLoader | null {
     return null;
   }
 
@@ -220,21 +225,25 @@ async function loadCountryData(
   country: string,
   { forceReload }: Partial<LoadOptions> = {},
 ): Promise<Map<string, GeoName> | null> {
-  if (forceReload) {
-    defaultCache.delete(country);
-  }
-  const cachedData = defaultCache.get(country);
-  if (cachedData) {
-    return cachedData;
-  }
-  const params = COUNTRIES.get(country);
-  if (params) {
-    const data = await doLoadCountryData(params);
-    if (data) {
-      defaultCache.set(country, data);
+  const cNorm = await checkCountry(country);
+  if (cNorm) {
+    if (forceReload) {
+      defaultCache.delete(cNorm);
     }
-    return data;
+    const cachedData = defaultCache.get(cNorm);
+    if (cachedData) {
+      return cachedData;
+    }
+    const params = COUNTRIES.get(cNorm);
+    if (params) {
+      const data = await doLoadCountryData(params);
+      if (data) {
+        defaultCache.set(cNorm, data);
+      }
+      return data;
+    }
   }
+
   return null;
 }
 

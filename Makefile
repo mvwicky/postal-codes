@@ -11,7 +11,7 @@ DOCKERFILE=Dockerfile
 
 DEPS_FILES=deps.ts dev_deps.ts
 CACHE_DEPS_ARGS=$(DEPS_FILES)
-ENTRY_FILES=serve.ts cli.ts
+ENTRY_FILES=main.ts cli.ts
 
 .PHONY: build-image create-container start-container stop-container rm-container \
 	cache-deps reload-deps check

@@ -15,6 +15,15 @@ export { Buffer } from "node:buffer";
 export { createWriteStream } from "node:fs";
 export { type Readable } from "node:stream";
 
+// export {
+//   Err,
+//   None,
+//   none,
+//   Ok,
+//   Option,
+//   Result,
+//   Some,
+// } from "https://deno.land/x/optionals@v3.0.0/mod.ts";
 export * as oak from "https://deno.land/x/oak@v12.2.0/mod.ts";
 export { z } from "https://deno.land/x/zod@v3.21.4/mod.ts";
 export * as c12 from "npm:c12@1.4.1";

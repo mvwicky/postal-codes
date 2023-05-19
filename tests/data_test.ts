@@ -5,7 +5,6 @@ Deno.test(
   "load",
   {
     permissions: { net: true, read: true, write: true, env: true, sys: true },
-    sanitizeResources: false,
   },
   async (t) => {
     await t.step("US data", async () => {
