@@ -4,24 +4,24 @@ import {
   csv,
   ensureDir,
   exists,
-  NodeBuffer,
   path,
 } from "../deps.ts";
-import { getConfig } from "./config.ts";
+import { type Config, getConfig } from "./config.ts";
 import { COUNTRIES, type CountryParams } from "./countries.ts";
 import { logger } from "./log.ts";
 import { GEO_COLUMNS, type GeoName, GeoNameSchema } from "./schemas.ts";
 import { normKey } from "./utils.ts";
 import * as zip from "./zipfiles.ts";
 
-type CacheType = Map<string, Map<string, GeoName>>;
+type CountryData = Map<string, GeoName>;
+type CacheType = Map<string, CountryData>;
 type LoadOptions = {
   timeout?: number;
   forceReload: boolean;
   cache?: CacheType;
 };
 
-const defaultCache: CacheType = new Map<string, Map<string, GeoName>>();
+const defaultCache: CacheType = new Map();
 
 async function checkCountry(country: string): Promise<string | null> {
   const { allowedCountries } = await getConfig();
@@ -29,47 +29,17 @@ async function checkCountry(country: string): Promise<string | null> {
   return allowedCountries.includes(cNorm) ? cNorm : null;
 }
 
-function loadCountryDataWorker(
-  country: string,
-  timeout: number,
-): Promise<Map<string, GeoName> | null> {
-  const p = new Promise<Map<string, GeoName> | null>((resolve) => {
-    logger().info(`Started worker`);
-    const worker = new Worker(
-      new URL("./data-worker.ts", import.meta.url).href,
-      { type: "module" },
-    );
-    const end = (result: Map<string, GeoName> | null) => {
-      worker.terminate();
-      resolve(result);
-    };
-    worker.onmessage = ({ data }) => {
-      logger().info(`Got message: ${data}`);
-      if (data.method === "load" && data.country === country) {
-        end(data.data);
-      } else {
-        end(null);
-      }
-    };
-    worker.onerror = () => end(null);
-    worker.postMessage({ method: "load", country: country });
-    setTimeout(() => {
-      logger().info(`Killing worker.`);
-      end(null);
-    }, timeout);
-  });
-  return p;
-}
-
 class DataLoader {
   readonly #name: string;
   readonly #params: CountryParams;
   readonly #log: ConsolaInstance;
   readonly #options: Required<LoadOptions>;
+  readonly #file: string;
 
   private constructor(
     country: string,
     params: CountryParams,
+    config: Config,
     options: Partial<LoadOptions> = {},
   ) {
     this.#name = country;
@@ -81,6 +51,11 @@ class DataLoader {
       timeout: Infinity,
       ...options,
     };
+    this.#file = path.resolve(
+      Deno.cwd(),
+      config.dataDir,
+      params.outputFileName,
+    );
   }
 
   static async create(
@@ -91,13 +66,47 @@ class DataLoader {
     if (cNorm) {
       const params = COUNTRIES.get(cNorm);
       if (params) {
-        return new this(cNorm, params, options);
+        const config = await getConfig();
+        return new this(cNorm, params, config, options);
       }
     }
     return null;
   }
 
-  private async fetch(): Promise<NodeBuffer | null> {
+  async load(): Promise<CountryData | null> {
+    const { forceReload, cache } = this.#options;
+    if (forceReload) {
+      this.#log.info("Clearing cache.");
+      cache.delete(this.#name);
+    } else {
+      const cachedData = cache.get(this.#name);
+      if (cachedData) {
+        this.#log.info("Data was cached.");
+        return cachedData;
+      }
+    }
+    this.#log.info(`Data file path: ${this.#file}`);
+    const fileExists = await exists(this.#file, { isFile: true });
+    if (!fileExists) {
+      const buf = await this.fetch();
+      if (buf) {
+        const res = await this.extract(buf);
+        if (!res) {
+          return null;
+        }
+      }
+    } else {
+      this.#log.info(`File already exists.`);
+    }
+    const data: CountryData = new Map();
+    const file = await Deno.open(this.#file, { read: true });
+    for await (const [key, entry] of this.parse(file)) {
+      data.set(key, entry);
+    }
+    return data.size ? data : null;
+  }
+
+  private async fetch(): Promise<ArrayBuffer | null> {
     const { timeout } = this.#options;
     const signal = Number.isFinite(timeout)
       ? AbortSignal.timeout(timeout)
@@ -106,7 +115,8 @@ class DataLoader {
     try {
       const res = await fetch(this.#params.url, { signal });
       if (res.ok && res.body) {
-        return NodeBuffer.from(await res.arrayBuffer());
+        const arrBuf = await res.arrayBuffer();
+        return arrBuf;
       } else {
         this.#log.warn(`Fetch error: "${res.statusText}"`);
       }
@@ -116,26 +126,78 @@ class DataLoader {
     return null;
   }
 
-  private async extract(buf: NodeBuffer) {
+  private async extract(buf: ArrayBuffer): Promise<string | null> {
+    this.#log.info(`Extracting zipped data.`);
+    const { dataFileName } = this.#params;
+    const zipFile = await zip.fromBuffer(buf, { lazyEntries: true });
+    const openReadStream = zip.makeOpenReadStream(zipFile);
+    return new Promise((resolve, reject) => {
+      let resValue: string | null = null;
+      zipFile.on("entry", async (e) => {
+        const entry = e as zip.yauzl.Entry;
+        this.#log.info(`Got entry: ${entry.fileName}`);
+        if (entry.fileName === dataFileName) {
+          this.#log.info(`Entry matches data file name`);
+          const stream = await openReadStream(entry);
+          const outFile = createWriteStream(this.#file);
+          stream.on("end", () => {
+            this.#log.info(`Stream ended`);
+            resValue = this.#file;
+          });
+          stream.pipe(outFile);
+        } else {
+          zipFile.readEntry();
+        }
+      });
+      zipFile.on("end", () => {
+        this.#log.info("ZIP File Ended");
+        resolve(resValue);
+      });
+      zipFile.on("error", (event) => reject(event));
+      zipFile.readEntry();
+    });
   }
 
-  private async parse() {
+  private async *parse(file: Deno.FsFile): AsyncGenerator<[string, GeoName]> {
+    this.#log.info("Parsing CSV data.");
+    const rows = file.readable
+      .pipeThrough(new TextDecoderStream())
+      .pipeThrough(
+        new csv.CsvParseStream({
+          skipFirstRow: false,
+          separator: "\t",
+          columns: GEO_COLUMNS,
+        }),
+      );
+    let [total, failed] = [0, 0];
+    for await (const elem of rows) {
+      total += 1;
+      const res = GeoNameSchema.safeParse(elem);
+      if (res.success) {
+        const key = normKey(res.data.postal_code);
+        yield [key, res.data];
+      } else {
+        failed += 1;
+      }
+    }
+    this.#log.info(`${failed} failures out of ${total} total rows`);
   }
 }
 
-async function fetchCountryData(url: URL): Promise<NodeBuffer | null> {
-  const res = await fetch(url, { cache: "default" });
+async function fetchCountryData(url: URL): Promise<ArrayBuffer | null> {
+  const res = await fetch(url);
   if (res.ok && res.body) {
-    return NodeBuffer.from(await res.arrayBuffer());
+    const arrBuf = await res.arrayBuffer();
+    return arrBuf;
   }
   return null;
 }
 
 async function extractCountryData(
-  buf: NodeBuffer,
+  buf: ArrayBuffer,
   dataFileName: string,
   dataFilePath: string,
-) {
+): Promise<string | null> {
   const log = logger();
   const zipFile = await zip.fromBuffer(buf, { lazyEntries: true });
   const openReadStream = zip.makeOpenReadStream(zipFile);
@@ -191,9 +253,7 @@ async function* parseCountryData(
   logger().info(`${failed} failures out of ${total} total rows`);
 }
 
-async function getDataFile(
-  params: CountryParams,
-): Promise<string | null> {
+async function getDataFile(params: CountryParams): Promise<string | null> {
   const log = logger();
   const cfg = await getConfig();
   const dataDir = path.resolve(Deno.cwd(), cfg.dataDir);
@@ -228,8 +288,8 @@ async function* streamCountryData(
 
 async function doLoadCountryData(
   params: CountryParams,
-): Promise<Map<string, GeoName> | null> {
-  const data = new Map<string, GeoName>();
+): Promise<CountryData | null> {
+  const data: CountryData = new Map();
   for await (const [key, entry] of streamCountryData(params)) {
     data.set(key, entry);
   }
@@ -239,7 +299,7 @@ async function doLoadCountryData(
 async function loadCountryData(
   country: string,
   { forceReload }: Partial<LoadOptions> = {},
-): Promise<Map<string, GeoName> | null> {
+): Promise<CountryData | null> {
   const cNorm = await checkCountry(country);
   if (cNorm) {
     if (forceReload) {
@@ -262,4 +322,4 @@ async function loadCountryData(
   return null;
 }
 
-export { loadCountryData };
+export { DataLoader, loadCountryData };

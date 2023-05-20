@@ -25,3 +25,5 @@ export async function getConfig(): Promise<Config> {
   }
   return _config;
 }
+
+export type { Config };
