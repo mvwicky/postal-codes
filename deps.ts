@@ -1,16 +1,18 @@
 /// <reference types="npm:@types/node" />
 
+export { crypto } from "std/crypto/crypto.ts";
+export { toHashString } from "std/crypto/to_hash_string.ts";
 export * as csv from "std/csv/mod.ts";
+export * as dtConst from "std/datetime/constants.ts";
+export { difference } from "std/datetime/difference.ts";
 export { format as bFormat } from "std/fmt/bytes.ts";
 export { format as dFormat } from "std/fmt/duration.ts";
 export { ensureDir } from "std/fs/ensure_dir.ts";
 export { exists } from "std/fs/exists.ts";
-export * as path from "std/path/mod.ts";
 export { walk, type WalkOptions } from "std/fs/walk.ts";
-export { toHashString } from "std/crypto/to_hash_string.ts";
-export { crypto } from "std/crypto/crypto.ts";
-export { readAll } from "std/streams/read_all.ts";
 export { Status } from "std/http/http_status.ts";
+export * as path from "std/path/mod.ts";
+export { readAll } from "std/streams/read_all.ts";
 
 export { Buffer as NodeBuffer } from "node:buffer";
 export { createWriteStream } from "node:fs";

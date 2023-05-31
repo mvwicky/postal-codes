@@ -1,3 +1,4 @@
 {
-  "dataDir": "data"
+  "dataDir": "data",
+  "downloadMaxAge": 31536000000
 }

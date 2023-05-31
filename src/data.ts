@@ -2,6 +2,7 @@ import {
   type ConsolaInstance,
   createWriteStream,
   csv,
+  difference,
   ensureDir,
   exists,
   path,
@@ -36,7 +37,7 @@ class DataLoader {
   readonly #options: Required<LoadOptions>;
   readonly #file: string;
 
-  private constructor(
+  constructor(
     country: string,
     params: CountryParams,
     config: Config,
@@ -48,7 +49,7 @@ class DataLoader {
     this.#options = {
       forceReload: false,
       cache: defaultCache,
-      timeout: Infinity,
+      timeout: config.defaultTimeout,
       ...options,
     };
     this.#file = path.resolve(
@@ -86,24 +87,45 @@ class DataLoader {
       }
     }
     this.#log.info(`Data file path: ${this.#file}`);
-    const fileExists = await exists(this.#file, { isFile: true });
-    if (!fileExists) {
+    const shouldFetch = await this.checkShouldFetch();
+    if (!shouldFetch) {
       const buf = await this.fetch();
       if (buf) {
         const res = await this.extract(buf);
         if (!res) {
           return null;
         }
+      } else {
+        return null;
       }
     } else {
       this.#log.info(`File already exists.`);
     }
     const data: CountryData = new Map();
-    const file = await Deno.open(this.#file, { read: true });
-    for await (const [key, entry] of this.parse(file)) {
+    const fd = await Deno.open(this.#file);
+    for await (const [key, entry] of this.parse(fd)) {
       data.set(key, entry);
     }
     return data.size ? data : null;
+  }
+
+  private async checkShouldFetch(): Promise<boolean> {
+    try {
+      const fd = await Deno.open(this.#file);
+      const stat = await fd.stat();
+      const now = new Date();
+      const age = difference(now, stat.mtime ?? now, {
+        units: ["days", "seconds"],
+      });
+      this.#log.info(`Current file age: ${Deno.inspect(age)}`);
+      fd.close();
+      return age.days! < 3;
+    } catch (err) {
+      if (err instanceof Deno.errors.NotFound) {
+        this.#log.info("File not found.");
+      }
+      return true;
+    }
   }
 
   private async fetch(): Promise<ArrayBuffer | null> {
@@ -111,7 +133,7 @@ class DataLoader {
     const signal = Number.isFinite(timeout)
       ? AbortSignal.timeout(timeout)
       : undefined;
-    this.#log.info(`Fetching country data ${this.#name}`);
+    this.#log.info(`Fetching country data`);
     try {
       const res = await fetch(this.#params.url, { signal });
       if (res.ok && res.body) {

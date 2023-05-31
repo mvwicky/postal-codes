@@ -1,1 +1,7 @@
-export { assertInstanceOf, assertNotEquals } from "std/testing/asserts.ts";
+export {
+  assertEquals,
+  assertInstanceOf,
+  assertNotEquals,
+  assertRejects,
+  assertThrows,
+} from "std/testing/asserts.ts";
