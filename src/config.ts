@@ -24,6 +24,7 @@ export async function getConfig(): Promise<Config> {
       name: "postal-codes",
       rcFile: false,
       defaults: DEFAULT_CONFIG,
+      envName: Deno.env.get("POSTAL_CODE_ENV"),
     });
     _config = config ?? DEFAULT_CONFIG;
   }
