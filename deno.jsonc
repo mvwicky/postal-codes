@@ -6,7 +6,8 @@
   },
   "imports": {
     "std/": "https://deno.land/std@0.188.0/",
-    "~/": "./"
+    "~/": "./",
+    "deps": "./deps.ts"
   },
   "lint": {
     "rules": {
