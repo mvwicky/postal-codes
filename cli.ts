@@ -21,8 +21,8 @@ async function distance(args: string[]) {
     Deno.exit(1);
   }
   const endUsage = Deno.memoryUsage();
-  log.info(`RSS Delta: ${bFormat(endUsage.rss - startUsage.rss)}`);
-  log.info(
+  log.debug(`RSS Delta: ${bFormat(endUsage.rss - startUsage.rss)}`);
+  log.debug(
     `Heap Used Delta: ${bFormat(endUsage.heapUsed - startUsage.heapUsed)}`,
   );
   const [zip1, zip2] = args;
@@ -39,9 +39,9 @@ async function distance(args: string[]) {
     log.info(`${z1.postal_code} -> (${p1[0]}, ${p1[1]})`);
     log.info(`${z2.postal_code} -> (${p2[0]}, ${p2[1]})`);
     const d = hDist(p1, p2);
-    const fmt = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
+    const fmt = new Intl.NumberFormat(undefined, { maximumFractionDigits: 3 });
     log.info(`${fmt.format(d / 1000)} km`);
-    log.info(`${fmt.format(d / 1609)} miles`);
+    log.info(`${fmt.format(d / 1609.344)} miles`);
   } else {
     Deno.exit(1);
   }

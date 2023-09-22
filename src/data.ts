@@ -46,7 +46,7 @@ class DataLoader {
   ) {
     this.#name = country;
     this.#params = params;
-    this.#log = logger().withTag(this.#name);
+    this.#log = logger().withTag(`${this.#name}-data`);
     this.#options = {
       forceReload: false,
       cache: defaultCache,
@@ -84,7 +84,7 @@ class DataLoader {
         return cachedData;
       }
     }
-    this.#log.info(`Data file path: ${this.#file}`);
+    this.#log.debug(`Data file path: ${this.#file}`);
     const shouldFetch = await this.checkShouldFetch();
     if (!shouldFetch) {
       await Deno.mkdir(this.#dataDir, { recursive: true });
@@ -100,7 +100,7 @@ class DataLoader {
         return null;
       }
     } else {
-      this.#log.info(`File already exists.`);
+      this.#log.debug(`File already exists.`);
     }
     const data: CountryData = new Map();
     const fd = await Deno.open(this.#file);
@@ -122,7 +122,7 @@ class DataLoader {
       const age = difference(now, stat.mtime ?? now, {
         units: ["days", "seconds"],
       });
-      this.#log.info(`Current file age: ${Deno.inspect(age)}`);
+      this.#log.debug(`Current file age: ${Deno.inspect(age)}`);
       fd.close();
       return age.days! < 3;
     } catch (err) {
@@ -187,7 +187,7 @@ class DataLoader {
   }
 
   private async *parse(file: Deno.FsFile): AsyncGenerator<[string, GeoName]> {
-    this.#log.info("Parsing CSV data.");
+    this.#log.debug("Parsing CSV data.");
     const rows = file.readable
       .pipeThrough(new TextDecoderStream())
       .pipeThrough(

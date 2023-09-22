@@ -14,7 +14,7 @@ CACHE_DEPS_ARGS=$(DEPS_FILES)
 ENTRY_FILES=main.ts cli.ts
 
 .PHONY: build-image create-container start-container stop-container rm-container \
-	cache-deps reload-deps check
+	reload-deps check
 
 build-image:
 	$(PODMAN) build --file $(DOCKERFILE) --tag $(IMG_NAME)
@@ -30,8 +30,6 @@ stop-container:
 
 rm-container:
 	$(PODMAN) rm $(IMG_NAME)
-
-cache-deps: deno.lock
 
 deno.lock: deno.jsonc $(DEPS_FILES)
 	$(DENO) cache --lock-write $(DEPS_FILES)
