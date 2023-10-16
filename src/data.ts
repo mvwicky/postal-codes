@@ -3,8 +3,6 @@ import {
   createWriteStream,
   csv,
   difference,
-  ensureDir,
-  exists,
   path,
 } from "../deps.ts";
 import { type Config, getConfig } from "./config.ts";

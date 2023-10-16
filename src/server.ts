@@ -58,6 +58,17 @@ router.get<InfoParams>("/info/:code/", async (ctx) => {
     ctx.response.status = Status.BadRequest;
     ctx.response.body = { error };
   }
+}).get<CountryParams>("/random/", async (ctx) => {
+  const countryData = await loadCountryData(ctx.params.country);
+  if (countryData) {
+    const allCodes = [...countryData.keys()];
+    const code = allCodes[Math.floor(Math.random() * allCodes.length)];
+    const codeInfo = countryData.get(code)!;
+    ctx.response.body = codeInfo;
+  } else {
+    ctx.response.status = Status.BadRequest;
+    ctx.response.body = { error: [countryErrorString(ctx.params.country)] };
+  }
 });
 
 const r = new oak.Router().use(

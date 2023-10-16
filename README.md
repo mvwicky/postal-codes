@@ -23,11 +23,11 @@ TSV files with the following fields:
 - country code
 - postal code
 - place name
-- admin name 1
+- admin name 1 (state)
 - admin code 1
-- admin name 2
+- admin name 2 (county/province)
 - admin code 2
-- admin name 3
+- admin name 3 (community)
 - admin code 3
 - latitude (estimated)
 - longitude (estimated)
