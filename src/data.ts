@@ -84,7 +84,7 @@ class DataLoader {
     }
     this.#log.debug(`Data file path: ${this.#file}`);
     const shouldFetch = await this.checkShouldFetch();
-    if (!shouldFetch) {
+    if (shouldFetch) {
       await Deno.mkdir(this.#dataDir, { recursive: true });
       const buf = await this.fetch();
       if (buf) {
