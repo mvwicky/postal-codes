@@ -133,6 +133,7 @@ class DataLoader {
 
   private async fetch(): Promise<ArrayBuffer | null> {
     const { timeout } = this.#options;
+    this.#log.debug("Timeout", timeout);
     const signal = Number.isFinite(timeout)
       ? AbortSignal.timeout(timeout)
       : undefined;

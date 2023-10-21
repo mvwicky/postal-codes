@@ -71,11 +71,14 @@ router.get<InfoParams>("/info/:code/", async (ctx) => {
   }
 });
 
-const r = new oak.Router().use(
+const countryRoutes = new oak.Router().use(
   "/api/:country",
   router.routes(),
   router.allowedMethods(),
 );
+const healthChecks = new oak.Router().get("/health/", (ctx) => {
+  ctx.response.body = { ready: true };
+});
 const app = new oak.Application();
 app.use(async (ctx, next) => {
   logger().info(`${ctx.request.method} ${ctx.request.url}`);
@@ -89,7 +92,12 @@ app.use(async (ctx, next) => {
   await next();
   const elapsed = performance.now() - start;
   ctx.response.headers.set("Server-Timing", `cpu;dur=${elapsed.toFixed(3)}`);
-}).use(r.routes(), r.allowedMethods());
+}).use(
+  countryRoutes.routes(),
+  countryRoutes.allowedMethods(),
+  healthChecks.routes(),
+  healthChecks.allowedMethods(),
+);
 
 app.addEventListener("listen", ({ hostname, port, secure }) => {
   const scheme = `http${secure ? "s" : ""}`;

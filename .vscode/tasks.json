@@ -3,17 +3,18 @@
   "tasks": [
     {
       "type": "deno",
-      "command": "run",
-      "args": [
-        "--allow-read",
-        "--allow-write=logs/",
-        "src/main.ts",
-        "93109",
-        "02119"
-      ],
+      "command": "task",
+      "args": ["dev"],
       "problemMatcher": ["$deno"],
-      "label": "deno task: run",
-      "detail": "deno run --allow-read --allow-write=logs/ src/main.ts"
+      "label": "deno task: dev",
+      "detail": "deno run -A --watch main.ts"
+    },
+    {
+      "type": "deno",
+      "command": "test",
+      "args": ["-A", "--trace-ops", "tests/"],
+      "problemMatcher": ["$deno-test"],
+      "label": "deno test"
     }
   ]
 }

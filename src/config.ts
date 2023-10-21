@@ -18,15 +18,19 @@ const DEFAULT_CONFIG: Config = {
 
 let _config: Config | null = null;
 
+export async function loadConfig(): Promise<Config> {
+  const { config } = await c12.loadConfig<Config>({
+    name: "postal-codes",
+    rcFile: false,
+    defaults: DEFAULT_CONFIG,
+    envName: Deno.env.get("POSTAL_CODE_ENV"),
+  });
+  return config ?? DEFAULT_CONFIG;
+}
+
 export async function getConfig(): Promise<Config> {
   if (!_config) {
-    const { config } = await c12.loadConfig<Config>({
-      name: "postal-codes",
-      rcFile: false,
-      defaults: DEFAULT_CONFIG,
-      envName: Deno.env.get("POSTAL_CODE_ENV"),
-    });
-    _config = config ?? DEFAULT_CONFIG;
+    _config = await loadConfig();
   }
   return _config;
 }

@@ -8,7 +8,8 @@
     "**/CVS": true,
     "**/.DS_Store": true,
     "**/*.db": true,
-    "data": true
+    "data": true,
+    "_data": true
   },
   "[typescript]": {
     "editor.defaultFormatter": "denoland.vscode-deno"

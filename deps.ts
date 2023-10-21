@@ -18,14 +18,14 @@ export { Buffer as NodeBuffer } from "node:buffer";
 export { createWriteStream } from "node:fs";
 export { type Readable } from "node:stream";
 
-export * as oak from "https://deno.land/x/oak@v12.6.0/mod.ts";
-export { z } from "https://deno.land/x/zod@v3.21.4/mod.ts";
-export * as c12 from "npm:c12@1.4.1";
+export * as oak from "https://deno.land/x/oak@v12.6.1/mod.ts";
+export { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+export * as c12 from "npm:c12@1.5.1";
 export {
   consola,
   type ConsolaInstance,
   createConsola,
-} from "npm:consola@3.1.0";
+} from "npm:consola@3.2.3";
 // export { default as postgres } from "https://deno.land/x/postgresjs@v3.3.4/mod.js";
 
 // @deno-types="npm:@types/yauzl"
