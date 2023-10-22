@@ -18,6 +18,7 @@ type LoadOptions = {
   timeout?: number;
   forceReload: boolean;
   cache?: CacheType;
+  maxAge: number;
 };
 
 const defaultCache: CacheType = new Map();
@@ -49,6 +50,7 @@ class DataLoader {
       forceReload: false,
       cache: defaultCache,
       timeout: config.defaultTimeout,
+      maxAge: config.downloadMaxAge,
       ...options,
     };
     this.#dataDir = path.resolve(Deno.cwd(), config.dataDir);
@@ -113,16 +115,17 @@ class DataLoader {
   }
 
   private async checkShouldFetch(): Promise<boolean> {
+    const now = new Date();
     try {
       const fd = await Deno.open(this.#file);
       const stat = await fd.stat();
-      const now = new Date();
+      fd.close();
+      const mtime = stat.mtime ?? now;
       const age = difference(now, stat.mtime ?? now, {
-        units: ["days", "seconds"],
+        units: ["days", "seconds", "milliseconds"],
       });
       this.#log.debug(`Current file age: ${Deno.inspect(age)}`);
-      fd.close();
-      return age.days! < 3;
+      return this.#options.maxAge < age.milliseconds!;
     } catch (err) {
       if (err instanceof Deno.errors.NotFound) {
         this.#log.info("File not found.");
