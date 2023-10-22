@@ -5,6 +5,6 @@ WORKDIR /app
 COPY deps.ts deno.jsonc deno.lock /app
 RUN ["deno", "cache", "deps.ts"]
 
-COPY src /app/src
 COPY main.ts /app
+COPY src /app/src
 CMD ["run", "-A", "main.ts"]

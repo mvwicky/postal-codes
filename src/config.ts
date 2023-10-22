@@ -5,6 +5,7 @@ interface Config {
   defaultTimeout: number;
   allowedCountries: string[];
   downloadMaxAge: number;
+  server: { port: number; hostname: string | undefined };
 }
 
 const ONE_DAY_MS = 86400 * 1000;
@@ -14,6 +15,7 @@ const DEFAULT_CONFIG: Config = {
   defaultTimeout: 10000,
   allowedCountries: ["US", "CA"],
   downloadMaxAge: ONE_DAY_MS * 3,
+  server: { port: 8000, hostname: undefined },
 };
 
 let _config: Config | null = null;

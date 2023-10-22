@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "allOf": [{ "$ref": "#/$defs/Configuration" }],
+  "properties": {
+    "dataDir": true,
+    "defaultTimeout": true,
+    "allowedCountries": true,
+    "downloadMaxAge": true,
+    "server": true
+  },
+  "patternProperties": {
+    "^\\$[a-z]+$": { "$ref": "#/$defs/Configuration" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "AllowedCountries": { "type": "string", "enum": ["US", "CA"] },
+    "Server": {
+      "type": "object",
+      "properties": {
+        "port": { "type": "number" },
+        "hostname": { "type": "string" }
+      }
+    },
+    "Configuration": {
+      "type": "object",
+      "properties": {
+        "dataDir": { "type": "string" },
+        "defaultTimeout": { "type": "number", "minimum": 0 },
+        "allowedCountries": {
+          "type": "array",
+          "description": "The countries for which postal code data can be retrieved.",
+          "items": {
+            "$ref": "#/$defs/AllowedCountries"
+          }
+        },
+        "downloadMaxAge": { "type": "number", "minimum": 0 },
+        "server": { "$ref": "#/$defs/Server" }
+      }
+    }
+  }
+}

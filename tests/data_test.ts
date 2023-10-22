@@ -3,8 +3,8 @@ import {
   assertInstanceOf,
   assertNotEquals,
 } from "../dev_deps.ts";
-import { DataLoader, loadCountryData } from "../src/data.ts";
 import { type Config, getConfig } from "../src/config.ts";
+import { DataLoader, loadCountryData } from "../src/data.ts";
 
 const permissions = {
   net: true,

@@ -1,3 +1,6 @@
+import { getConfig } from "./src/config.ts";
 import { app } from "./src/server.ts";
 
-await app.listen({ port: 8000 });
+const { server: { port, hostname } } = await getConfig();
+
+await app.listen({ port, hostname });
