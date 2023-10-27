@@ -16,6 +16,13 @@ force_https = true
 auto_stop_machines = true
 auto_start_machines = true
 
+[[http_service.checks]]
+interval = "300s"
+timeout = "2s"
+grace_period = "5s"
+path = "/health/"
+method = "GET"
+
 [checks]
 [checks.alive]
 type = "tcp"
