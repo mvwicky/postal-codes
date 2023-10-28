@@ -23,20 +23,22 @@ const countryErrorString = (countryParam: string) =>
 const codeErrorString = (codeParam: string) => `Invalid code: ${codeParam}`;
 
 const router = new oak.Router();
-router.get<InfoParams>("/info/:code/", async (ctx) => {
-  const countryData = await loadCountryData(ctx.params.country);
-  const code = normKey(ctx.params.code);
-  const codeInfo = countryData?.get(code);
-  if (codeInfo) {
-    ctx.response.body = codeInfo;
-  } else if (!countryData) {
-    ctx.response.status = Status.BadRequest;
-    ctx.response.body = { error: [countryErrorString(ctx.params.country)] };
-  } else {
-    ctx.response.status = Status.BadRequest;
-    ctx.response.body = { error: [codeErrorString(ctx.params.code)] };
-  }
-}).get<DistParams>("/distance/:start/:end/", async ({ params, ...ctx }) => {
+router.get<InfoParams>(
+  "/info/:code/",
+  async ({ params: { country, code }, ...ctx }) => {
+    const countryData = await loadCountryData(country);
+    const codeInfo = countryData?.get(normKey(code));
+    if (codeInfo) {
+      ctx.response.body = codeInfo;
+    } else if (!countryData) {
+      ctx.response.status = Status.BadRequest;
+      ctx.response.body = { error: [countryErrorString(country)] };
+    } else {
+      ctx.response.status = Status.BadRequest;
+      ctx.response.body = { error: [codeErrorString(code)] };
+    }
+  },
+).get<DistParams>("/distance/:start/:end/", async ({ params, ...ctx }) => {
   const countryData = await loadCountryData(params.country);
   const startCode = normKey(params.start);
   const endCode = normKey(params.end);
@@ -94,10 +96,9 @@ app.use(async (ctx, next) => {
   await next();
   const elapsed = performance.now() - start;
   ctx.response.headers.set("Server-Timing", `cpu;dur=${elapsed.toFixed(3)}`);
-}).use(async ({ response: { headers }, request }, next) => {
+}).use(async ({ response: { headers } }, next) => {
   await next();
-  headers.append("Access-Control-Allow-Origin", request.url.origin);
-  headers.append("Vary", "origin");
+  headers.append("Access-Control-Allow-Origin", "*");
 }).use(r.routes(), r.allowedMethods());
 
 app.addEventListener("listen", ({ hostname, port, secure }) => {
