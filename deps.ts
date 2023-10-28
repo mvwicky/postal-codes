@@ -30,3 +30,5 @@ export {
 
 // @deno-types="npm:@types/yauzl"
 export { default as yauzl } from "npm:yauzl@2.10.0";
+
+// export type * as TF from "npm:type-fest@4.6.0";

@@ -10,10 +10,11 @@ type DistParams = CountryParams & { start: string; end: string };
 
 function logMemory(start: Deno.MemoryUsage, end: Deno.MemoryUsage) {
   const log = logger();
-  log.info("RSS Δ:       ", bFormat(end.rss - start.rss));
-  log.info("Heap Used Δ: ", bFormat(end.heapUsed - start.heapUsed));
-  log.info("RSS:         ", bFormat(end.rss));
-  log.info("Heap Used:   ", bFormat(end.heapUsed));
+  const [endR, endH] = [bFormat(end.rss), bFormat(end.heapUsed)];
+  const rDelta = bFormat(end.rss - start.rss);
+  const hDelta = bFormat(end.heapUsed - start.heapUsed);
+  log.info(`RSS:        ${endR} (Δ${rDelta})`);
+  log.info(`Heap Used:  ${endH} (Δ${hDelta})`);
 }
 
 const countryErrorString = (countryParam: string) =>
@@ -35,25 +36,25 @@ router.get<InfoParams>("/info/:code/", async (ctx) => {
     ctx.response.status = Status.BadRequest;
     ctx.response.body = { error: [codeErrorString(ctx.params.code)] };
   }
-}).get<DistParams>("/distance/:start/:end/", async (ctx) => {
-  const countryData = await loadCountryData(ctx.params.country);
-  const startCode = normKey(ctx.params.start);
-  const endCode = normKey(ctx.params.end);
-  const start = countryData?.get(startCode);
-  const end = countryData?.get(endCode);
-  if (start && end) {
-    const distance = hDist(toPoint(start), toPoint(end));
-    ctx.response.body = { start, end, distance };
+}).get<DistParams>("/distance/:start/:end/", async ({ params, ...ctx }) => {
+  const countryData = await loadCountryData(params.country);
+  const startCode = normKey(params.start);
+  const endCode = normKey(params.end);
+  const startInfo = countryData?.get(startCode);
+  const endInfo = countryData?.get(endCode);
+  if (startInfo && endInfo) {
+    const distance = hDist(toPoint(startInfo), toPoint(endInfo));
+    ctx.response.body = { startInfo, endInfo, distance };
   } else {
     const error: string[] = [];
     if (!countryData) {
-      error.push(countryErrorString(ctx.params.country));
+      error.push(countryErrorString(params.country));
     }
-    if (countryData && !start) {
-      error.push(codeErrorString(ctx.params.start));
+    if (countryData && !startInfo) {
+      error.push(codeErrorString(params.start));
     }
-    if (countryData && !end) {
-      error.push(codeErrorString(ctx.params.end));
+    if (countryData && !endInfo) {
+      error.push(codeErrorString(params.end));
     }
     ctx.response.status = Status.BadRequest;
     ctx.response.body = { error };
@@ -71,14 +72,14 @@ router.get<InfoParams>("/info/:code/", async (ctx) => {
   }
 });
 
-const countryRoutes = new oak.Router().use(
+const r = new oak.Router().use(
   "/api/:country",
   router.routes(),
   router.allowedMethods(),
-);
-const healthChecks = new oak.Router().get("/health/", (ctx) => {
+).get("/health/", (ctx) => {
   ctx.response.body = { ready: true };
 });
+
 const app = new oak.Application();
 app.use(async (ctx, next) => {
   logger().info(`${ctx.request.method} ${ctx.request.url}`);
@@ -86,18 +87,18 @@ app.use(async (ctx, next) => {
 }).use(async (_ctx, next) => {
   const startUsage = Deno.memoryUsage();
   await next();
-  queueMicrotask(() => logMemory(startUsage, Deno.memoryUsage()));
+  const endMem = Deno.memoryUsage();
+  queueMicrotask(() => logMemory(startUsage, endMem));
 }).use(async (ctx, next) => {
   const start = performance.now();
   await next();
   const elapsed = performance.now() - start;
   ctx.response.headers.set("Server-Timing", `cpu;dur=${elapsed.toFixed(3)}`);
-}).use(
-  countryRoutes.routes(),
-  countryRoutes.allowedMethods(),
-  healthChecks.routes(),
-  healthChecks.allowedMethods(),
-);
+}).use(async ({ response: { headers }, request }, next) => {
+  await next();
+  headers.append("Access-Control-Allow-Origin", request.url.origin);
+  headers.append("Vary", "origin");
+}).use(r.routes(), r.allowedMethods());
 
 app.addEventListener("listen", ({ hostname, port, secure }) => {
   const scheme = `http${secure ? "s" : ""}`;
