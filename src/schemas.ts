@@ -10,9 +10,9 @@ export const GeoNameSchema = z.object({
   admin_code_2: z.string(),
   admin_name_3: z.string(),
   admin_code_3: z.string(),
-  latitude: z.string().transform((val) => Number(val)),
-  longitude: z.string().transform((val) => Number(val)),
-  accuracy: z.string().transform((val) => Number(val)),
+  latitude: z.coerce.number(),
+  longitude: z.coerce.number(),
+  accuracy: z.coerce.number(),
 });
 
 export const GEO_COLUMNS = [

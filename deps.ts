@@ -18,7 +18,6 @@ export { Buffer as NodeBuffer } from "node:buffer";
 export { createWriteStream } from "node:fs";
 export { type Readable } from "node:stream";
 
-export * as oak from "https://deno.land/x/oak@v12.6.1/mod.ts";
 export { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 export * as c12 from "npm:c12@1.5.1";
 export {
@@ -26,9 +25,11 @@ export {
   type ConsolaInstance,
   createConsola,
 } from "npm:consola@3.2.3";
-// export { default as postgres } from "https://deno.land/x/postgresjs@v3.3.4/mod.js";
 
 // @deno-types="npm:@types/yauzl"
 export { default as yauzl } from "npm:yauzl@2.10.0";
 
 // export type * as TF from "npm:type-fest@4.6.0";
+
+export * as hono from "https://deno.land/x/hono@v3.9.0/mod.ts";
+export { cors } from "https://deno.land/x/hono@v3.9.0/middleware/cors/index.ts";
