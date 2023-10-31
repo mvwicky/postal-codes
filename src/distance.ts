@@ -5,7 +5,7 @@ const R = 6371009.0;
 
 const rad = (deg: number) => Math.PI * (deg / 180);
 const sin2 = (arg: number) => Math.sin(arg) ** 2;
-const cos2 = (arg: number) => Math.cos(arg) ** 2;
+// const cos2 = (arg: number) => Math.cos(arg) ** 2;
 
 // function vDist(point1: Point, point2: Point): number {
 //   const [p1, lam1] = [rad(point1[0]), rad(point1[1])];

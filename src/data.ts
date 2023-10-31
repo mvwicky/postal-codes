@@ -117,15 +117,16 @@ class DataLoader {
   private async checkShouldFetch(): Promise<boolean> {
     const now = new Date();
     try {
+      const { maxAge } = this.#options;
       const fd = await Deno.open(this.#file);
       const stat = await fd.stat();
       fd.close();
       const mtime = stat.mtime ?? now;
-      const age = difference(now, stat.mtime ?? now, {
+      const age = difference(now, mtime, {
         units: ["days", "seconds", "milliseconds"],
       });
-      this.#log.debug(`Current file age: ${Deno.inspect(age)}`);
-      return this.#options.maxAge < age.milliseconds!;
+      this.#log.debug(`File age: ${Deno.inspect(age)} (max: ${maxAge})`);
+      return maxAge < age.milliseconds!;
     } catch (err) {
       if (err instanceof Deno.errors.NotFound) {
         this.#log.info("File not found.");
