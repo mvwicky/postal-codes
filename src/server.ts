@@ -41,7 +41,7 @@ countryApp.get("info/:code/", async (c) => {
   const endInfo = countryData?.get(endCode);
   if (startInfo && endInfo) {
     const distance = hDist(toPoint(startInfo), toPoint(endInfo));
-    return c.json({ startInfo, endInfo, distance });
+    return c.json({ start: startInfo, end: endInfo, distance });
   } else {
     const error: string[] = [];
     if (!countryData) {
@@ -71,20 +71,23 @@ countryApp.get("info/:code/", async (c) => {
 });
 
 const app = new hono.Hono();
-app.use("*", async ({ req }, next) => {
-  logger().info(`${req.method} ${req.url}`);
-  await next();
-}).use("*", async (_ctx, next) => {
-  const startUsage = Deno.memoryUsage();
-  await next();
-  const endMem = Deno.memoryUsage();
-  queueMicrotask(() => logMemory(startUsage, endMem));
-}).use("*", async ({ res: { headers } }, next) => {
-  const start = performance.now();
-  await next();
-  const elapsed = performance.now() - start;
-  headers.set("Server-Timing", `cpu;dur=${elapsed.toFixed(3)}`);
-}).use("*", cors());
+app
+  .use("*", async (ctx, next) => {
+    const start = performance.now();
+    await next();
+    const elapsed = performance.now() - start;
+    ctx.header("Server-Timing", `cpu;dur=${elapsed.toFixed(3)}`);
+  })
+  .use("*", cors())
+  .use("*", async ({ req }, next) => {
+    logger().info(`${req.method} ${req.url}`);
+    await next();
+  }).use("*", async (_ctx, next) => {
+    const startUsage = Deno.memoryUsage();
+    await next();
+    const endMem = Deno.memoryUsage();
+    queueMicrotask(() => logMemory(startUsage, endMem));
+  });
 app.route("/api/", countryApp);
 app.get("/health/", (c) => c.json({ ready: true }));
 
