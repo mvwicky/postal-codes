@@ -33,3 +33,5 @@ export { default as yauzl } from "npm:yauzl@2.10.0";
 
 export * as hono from "https://deno.land/x/hono@v3.9.0/mod.ts";
 export { cors } from "https://deno.land/x/hono@v3.9.0/middleware/cors/index.ts";
+
+export * as redis from "https://deno.land/x/redis@v0.32.0/mod.ts";
