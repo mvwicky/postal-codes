@@ -9,25 +9,26 @@ services:
     networks:
       - net
     hostname: web
-    depends_on:
-      db:
-        condition: service_healthy
-  db:
-    image: postgres@15
-    restart: always
-    user: postgres
     volumes:
-      - db-data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=postal_codes_db
+      - geodata:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+  redis:
+    image: 'redis:7-alpine'
+    restart: always
+    user: redis
+    volumes:
+      - redis-data:/data
     expose:
-      - 5432
+      - 6379
     healthcheck:
-      test: ["CMD", "pg_isready"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 networks:
   net:
 volumes:
-  db-data:
+  geodata:
+  redis-data:
