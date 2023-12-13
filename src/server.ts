@@ -3,6 +3,7 @@ import { loadCountryData } from "./data.ts";
 import { hDist } from "./distance.ts";
 import { logger } from "./log.ts";
 import { normKey, toPoint } from "./utils.ts";
+import { DEFAULT_URNG16, xoroshiro128plus } from "./rand.ts";
 
 function logMemory(start: Deno.MemoryUsage, end: Deno.MemoryUsage) {
   const log = logger();
@@ -57,11 +58,19 @@ countryApp.get("info/:code/", async (c) => {
     return c.json({ error });
   }
 }).get("random/", async (c) => {
+  const log = logger();
   const { country } = c.req.param();
   const countryData = await loadCountryData(country);
   if (countryData) {
     const allCodes = [...countryData.keys()];
-    const code = allCodes[Math.floor(Math.random() * allCodes.length)];
+    const seed = c.req.query("seed") || DEFAULT_URNG16.value;
+    log.debug("Seed:", seed);
+    const res = xoroshiro128plus(seed).next();
+    log.debug("RNG result:", res);
+    const idx = Number(res.done ? DEFAULT_URNG16.value : res.value) %
+      allCodes.length;
+    log.debug("Index:", idx);
+    const code = allCodes[idx];
     const codeInfo = countryData.get(code)!;
     return c.json(codeInfo);
   } else {

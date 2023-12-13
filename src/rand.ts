@@ -1,7 +1,26 @@
 type XoroshiroState = [bigint, bigint];
 
+abstract class RNGBase {
+  abstract get value(): number;
+
+  valueIn(start: number, stop: number): number;
+  valueIn(stop: number): number;
+  valueIn(start: number, stop?: number): number {
+    if (typeof stop !== "number") {
+      stop = start;
+      start = 0;
+    }
+    const n = stop - start;
+    return (this.value % n) + start;
+  }
+
+  choice<T>(arr: ArrayLike<T>): T {
+    return arr[this.valueIn(arr.length)];
+  }
+}
+
 /** Random number generator for unsigned integers. */
-class URNG_32 {
+class URNG_32 extends RNGBase {
   static readonly #arrSize = 256;
   static readonly #max = 2 ** 32 - 1;
   /** A buffer of randomly generated values. */
@@ -25,34 +44,61 @@ class URNG_32 {
   get normValue(): number {
     return this.value / URNG_32.#max;
   }
+}
 
-  valueIn(start: number, stop: number): number;
-  valueIn(stop: number): number;
-  valueIn(start: number, stop?: number): number {
-    if (typeof stop !== "number") {
-      stop = start;
-      start = 0;
-    }
-    const n = stop - start;
-    return (this.value % n) + start;
+class URNG_16 extends RNGBase {
+  static readonly #arrSize = 256;
+  static readonly #max = 2 ** 32 - 1;
+
+  /** A buffer of randomly generated values. */
+  readonly #arr: Uint16Array = new Uint16Array(URNG_16.#arrSize);
+  #idx: number = this.#arr.length;
+
+  private fill() {
+    crypto.getRandomValues(this.#arr);
+    this.#idx = 0;
   }
 
-  choice<T>(arr: ArrayLike<T>): T {
-    return arr[this.valueIn(arr.length)];
+  get value(): number {
+    if (this.#idx === this.#arr.length) {
+      this.fill();
+    }
+    const n = this.#arr[this.#idx];
+    this.#idx += 1;
+    return n;
+  }
+
+  get normValue(): number {
+    return this.value / URNG_16.#max;
   }
 }
 
-const DEFAULT_URNG = new URNG_32();
+const DEFAULT_URNG32 = new URNG_32();
+const DEFAULT_URNG16 = new URNG_16();
 
 const DEFAULT_SEED: XoroshiroState = [
   BigInt("0xdeadbeefcafebabe"),
   BigInt("0x8badf00dbaada555"),
 ];
 
+function makeSeed(s: string): number {
+  const rawCode = [...s].reduce((a, b) => a ^ b.charCodeAt(0), 0);
+  return (rawCode << 2) | 1;
+}
+
+function toX128State(seed?: XoroshiroState | number | string): XoroshiroState {
+  if (typeof seed === "number") {
+    return [BigInt(seed), DEFAULT_SEED[1]];
+  } else if (typeof seed === "string") {
+    return toX128State(makeSeed(seed));
+  }
+  return seed ?? DEFAULT_SEED;
+}
+
 function* xoroshiro128plus(
-  seed?: XoroshiroState,
+  seed?: XoroshiroState | number | string,
 ): Generator<bigint, void, unknown> {
-  const s: XoroshiroState = seed ?? DEFAULT_SEED;
+  const s: XoroshiroState = toX128State(seed);
   while (true) {
     const s0 = s[0];
     let s1 = s[1];
@@ -64,4 +110,4 @@ function* xoroshiro128plus(
   }
 }
 
-export { DEFAULT_URNG, URNG_32, xoroshiro128plus };
+export { DEFAULT_URNG16, DEFAULT_URNG32, URNG_32, xoroshiro128plus };
