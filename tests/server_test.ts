@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "../dev_deps.ts";
+import { assert, assertEquals, assertNotEquals } from "../dev_deps.ts";
 import { Status } from "../deps.ts";
 import { app } from "../src/server.ts";
 import { GeoNameSchema } from "../src/schemas.ts";
@@ -55,51 +55,85 @@ Deno.test("distance route", {}, async (t) => {
   });
 });
 
-Deno.test("random route", {}, async (t) => {
-  await t.step("US no seed", async () => {
-    const req = createRequest("/api/US/random/");
-    const res1 = await app.request(req);
-    genericCheckResponse(res1);
-    const data1 = await res1.json();
-    const code1 = GeoNameSchema.parse(data1);
-    assertEquals(code1.country_code, "US");
-  });
-  await t.step("US with seed", async () => {
-    const req = createRequest("/api/US/random/?seed=1234");
-    const res1 = await app.request(req);
-    genericCheckResponse(res1);
-    const data1 = await res1.json();
-    const code1 = GeoNameSchema.parse(data1);
-    assertEquals(code1.country_code, "US");
-    const res2 = await app.request(req);
-    genericCheckResponse(res2);
-    const data2 = await res2.json();
-    const code2 = GeoNameSchema.parse(data2);
-    assertEquals(code2.country_code, "US");
-    assertEquals(code1.postal_code, code2.postal_code);
-  });
-  await t.step("CA no seed", async () => {
-    const req = createRequest("/api/CA/random/");
-    const res1 = await app.request(req);
-    genericCheckResponse(res1);
-    const data1 = await res1.json();
-    const code1 = GeoNameSchema.parse(data1);
-    assertEquals(code1.country_code, "CA");
-  });
-  await t.step("CA with seed", async () => {
-    const req = createRequest("/api/CA/random/?seed=1234");
-    const res1 = await app.request(req);
-    genericCheckResponse(res1);
-    const data1 = await res1.json();
-    const code1 = GeoNameSchema.parse(data1);
-    assertEquals(code1.country_code, "CA");
-    const res2 = await app.request(req);
-    genericCheckResponse(res2);
-    const data2 = await res2.json();
-    const code2 = GeoNameSchema.parse(data2);
-    assertEquals(code2.country_code, "CA");
-    assertEquals(code1.postal_code, code2.postal_code);
-  });
+Deno.test("random route US no seed", {}, async () => {
+  const req = createRequest("/api/US/random/");
+  const res1 = await app.request(req);
+  genericCheckResponse(res1);
+  const data1 = await res1.json();
+  const code1 = GeoNameSchema.parse(data1);
+  assertEquals(code1.country_code, "US");
+});
+
+Deno.test("random route US with same seed", {}, async () => {
+  const req1 = createRequest("/api/US/random/?seed=1234");
+  const res1 = await app.request(req1);
+  genericCheckResponse(res1);
+  const data1 = await res1.json();
+  const code1 = GeoNameSchema.parse(data1);
+  assertEquals(code1.country_code, "US");
+  const req2 = createRequest("/api/US/random/?seed=1234");
+  const res2 = await app.request(req2);
+  genericCheckResponse(res2);
+  const data2 = await res2.json();
+  const code2 = GeoNameSchema.parse(data2);
+  assertEquals(code2.country_code, "US");
+  assertEquals(code1.postal_code, code2.postal_code);
+});
+
+Deno.test("random route US with different seed", {}, async () => {
+  const req1 = createRequest("/api/US/random/?seed=1234");
+  const res1 = await app.request(req1);
+  genericCheckResponse(res1);
+  const data1 = await res1.json();
+  const code1 = GeoNameSchema.parse(data1);
+  assertEquals(code1.country_code, "US");
+  const req2 = createRequest("/api/US/random/?seed=ABCD");
+  const res2 = await app.request(req2);
+  genericCheckResponse(res2);
+  const data2 = await res2.json();
+  const code2 = GeoNameSchema.parse(data2);
+  assertEquals(code2.country_code, "US");
+  assertNotEquals(code1.postal_code, code2.postal_code);
+});
+
+Deno.test("random route CA no seed", {}, async () => {
+  const req = createRequest("/api/CA/random/");
+  const res1 = await app.request(req);
+  genericCheckResponse(res1);
+  const data1 = await res1.json();
+  const code1 = GeoNameSchema.parse(data1);
+  assertEquals(code1.country_code, "CA");
+});
+
+Deno.test("random route CA with same seed", {}, async () => {
+  const req = createRequest("/api/CA/random/?seed=1234");
+  const res1 = await app.request(req);
+  genericCheckResponse(res1);
+  const data1 = await res1.json();
+  const code1 = GeoNameSchema.parse(data1);
+  assertEquals(code1.country_code, "CA");
+  const res2 = await app.request(req);
+  genericCheckResponse(res2);
+  const data2 = await res2.json();
+  const code2 = GeoNameSchema.parse(data2);
+  assertEquals(code2.country_code, "CA");
+  assertEquals(code1.postal_code, code2.postal_code);
+});
+
+Deno.test("random route CA with different seed", {}, async () => {
+  const req1 = createRequest("/api/CA/random/?seed=1234");
+  const res1 = await app.request(req1);
+  genericCheckResponse(res1);
+  const data1 = await res1.json();
+  const code1 = GeoNameSchema.parse(data1);
+  assertEquals(code1.country_code, "CA");
+  const req2 = createRequest("/api/CA/random/?seed=ABCD");
+  const res2 = await app.request(req2);
+  genericCheckResponse(res2);
+  const data2 = await res2.json();
+  const code2 = GeoNameSchema.parse(data2);
+  assertEquals(code2.country_code, "CA");
+  assertNotEquals(code1.postal_code, code2.postal_code);
 });
 
 Deno.test("health check route", {}, async () => {
