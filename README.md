@@ -13,8 +13,8 @@ Where I figure out postal code parsing.
 
 - [US](./data/US/US.txt)
 - [CA](./data/CA/CA.txt)
-    - Also [CA full](./data/CA_full.txt)
-    - The CA.txt file contains entries for three character postal codes
+  - Also [CA full](./data/CA_full.txt)
+  - The CA.txt file contains entries for three character postal codes
 
 #### Format
 
@@ -35,3 +35,7 @@ TSV files with the following fields:
   - 1: estimated
   - 4: geonameid
   - 6: centroid of address or shape
+
+## Random Number Generator
+
+[From](https://github.com/davidbau/seedrandom/tree/released)

@@ -8,6 +8,7 @@ img_name := "postal-codes"
 dockerfile := "Dockerfile"
 img_path := "localhost/" + img_name + ":latest"
 default_port := "8000"
+cov_dir := "coverage"
 
 default:
     @just --list --justfile {{ justfile() }}
@@ -44,3 +45,7 @@ check:
 
 lint:
     {{ deno }} lint .
+
+test:
+    {{ deno }} test --fail-fast=1 --coverage={{ cov_dir }} -A
+    {{ deno }} coverage {{ cov_dir }} --html

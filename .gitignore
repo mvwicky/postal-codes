@@ -4,3 +4,4 @@ data/
 _data/
 node_modules/
 tmp/
+coverage/
