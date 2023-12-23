@@ -1,18 +1,9 @@
-import { bFormat, cors, hono, Status } from "../deps.ts";
+import { cors, hono, Status } from "../deps.ts";
 import { loadCountryData } from "./data.ts";
 import { hDist } from "./distance.ts";
 import { logger } from "./log.ts";
-import { normKey, toPoint } from "./utils.ts";
+import { logMemory, normKey, toPoint } from "./utils.ts";
 import { Alea, DEFAULT_URNG16 } from "./rand.ts";
-
-function logMemory(start: Deno.MemoryUsage, end: Deno.MemoryUsage) {
-  const log = logger();
-  const [endR, endH] = [bFormat(end.rss), bFormat(end.heapUsed)];
-  const rDelta = bFormat(end.rss - start.rss);
-  const hDelta = bFormat(end.heapUsed - start.heapUsed);
-  log.info(`RSS:        ${endR} (Δ${rDelta})`);
-  log.info(`Heap Used:  ${endH} (Δ${hDelta})`);
-}
 
 const countryErrorString = (countryParam: string) =>
   `Unknown country: ${countryParam}`;

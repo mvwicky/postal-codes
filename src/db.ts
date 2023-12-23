@@ -4,6 +4,7 @@ import { normKey } from "./utils.ts";
 
 const PREFIX = "postal-codes";
 const VERSION = 1;
+const KEY_PREFIX = `${PREFIX}:${VERSION}`;
 
 let _db: redis.Redis | null = null;
 
@@ -36,22 +37,29 @@ async function set(
   return ret;
 }
 
+function makeCountryPrefix(country: string): string {
+  return `${PREFIX}:${VERSION}:${normKey(country)}`;
+}
+
 function makeCodeKey(country: string, code: string): string {
-  return `${PREFIX}:${VERSION}:${normKey(country)}:${normKey(code)}`;
+  return `${makeCountryPrefix(country)}:${normKey(code)}`;
 }
 
 function makeAllCodesKey(country: string): string {
-  return `${PREFIX}:${VERSION}:${normKey(country)}:all-codes`;
+  return `${KEY_PREFIX}:all-codes:${normKey(country)}`;
 }
 
-async function setCodeData(country: string, codeData: GeoName) {
+async function setCodeData(
+  country: string,
+  codeData: GeoName,
+): Promise<[number, number]> {
   const db = await getDB();
-  const pl = db.pipeline();
   const key = makeCodeKey(country, codeData.postal_code);
-  pl.hset(key, codeData);
-  pl.sadd(makeAllCodesKey(country), codeData.postal_code);
-  const ret = await pl.flush();
-  return ret;
+  const [hret, sret] = await Promise.all([
+    db.hset(key, codeData),
+    db.sadd(makeAllCodesKey(country), codeData.postal_code),
+  ]);
+  return [hret, sret];
 }
 
 async function getCodeData(
@@ -71,11 +79,18 @@ async function getCodeData(
   }
 }
 
+async function getRandomCode(country: string): Promise<GeoName | null> {
+  const db = await getDB();
+  const code = await db.srandmember(makeAllCodesKey(country));
+  return code ? getCodeData(country, code) : null;
+}
+
 export {
   close,
   get,
   getCodeData,
   getDB,
+  getRandomCode,
   makeAllCodesKey,
   makeCodeKey,
   set,
