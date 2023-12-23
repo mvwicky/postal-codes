@@ -1,8 +1,6 @@
 /// <reference types="npm:@types/node" />
 
 export { chunk } from "std/collections/chunk.ts";
-export { crypto } from "std/crypto/crypto.ts";
-export { toHashString } from "std/crypto/to_hash_string.ts";
 export * as csv from "std/csv/mod.ts";
 export * as dtConst from "std/datetime/constants.ts";
 export { difference } from "std/datetime/difference.ts";

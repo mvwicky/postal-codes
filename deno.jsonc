@@ -5,7 +5,7 @@
     "cli": "deno run -A cli.ts"
   },
   "imports": {
-    "std/": "https://deno.land/std@0.204.0/",
+    "std/": "https://deno.land/std@0.210.0/",
     "@/": "./"
   },
   "lint": {
