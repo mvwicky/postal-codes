@@ -1,5 +1,6 @@
 /// <reference types="npm:@types/node" />
 
+export { chunk } from "std/collections/chunk.ts";
 export { crypto } from "std/crypto/crypto.ts";
 export { toHashString } from "std/crypto/to_hash_string.ts";
 export * as csv from "std/csv/mod.ts";
@@ -29,9 +30,7 @@ export {
 // @deno-types="npm:@types/yauzl"
 export { default as yauzl } from "npm:yauzl@2.10.0";
 
-// export type * as TF from "npm:type-fest@4.6.0";
-
-export * as hono from "https://deno.land/x/hono@v3.9.0/mod.ts";
 export { cors } from "https://deno.land/x/hono@v3.9.0/middleware/cors/index.ts";
+export * as hono from "https://deno.land/x/hono@v3.9.0/mod.ts";
 
 export * as redis from "https://deno.land/x/redis@v0.32.0/mod.ts";
