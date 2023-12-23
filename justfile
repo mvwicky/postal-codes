@@ -54,5 +54,5 @@ test:
     {{ deno }} test --fail-fast=1 --coverage={{ cov_dir }} -A
     {{ deno }} coverage {{ cov_dir }} --html
 
-open-coverage: test
+open-coverage:
     open {{ cov_dir }}/html/index.html
