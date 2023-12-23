@@ -7,8 +7,9 @@ podman := "podman"
 img_name := "postal-codes"
 dockerfile := "Dockerfile"
 img_path := "localhost/" + img_name + ":latest"
+volume_name := "postal-codes-data"
 default_port := "8000"
-cov_dir := "coverage"
+cov_dir := "./coverage"
 
 default:
     @just --list --justfile {{ justfile() }}
@@ -20,7 +21,10 @@ run-image port=default_port: build-image
     {{ podman }} run -p {{ port }}:{{ port }} --rm {{ img_path }}
 
 _run2 port=default_port:
-    {{ podman }} run -p {{ port }}:{{ port }} -e CONSOLA_LEVEL=999 -v postal-codes-data:/app/data --rm {{ img_path }}
+    {{ podman }} run -p {{ port }}:{{ port }} -e CONSOLA_LEVEL=999 -v {{ volume_name }}:/app/data --rm {{ img_path }}
+
+data-volume:
+    {{ podman }} create {{ volume_name }}
 
 create-container:
     {{ podman }} create --name {{ img_name }} {{ img_path }}
@@ -49,3 +53,6 @@ lint:
 test:
     {{ deno }} test --fail-fast=1 --coverage={{ cov_dir }} -A
     {{ deno }} coverage {{ cov_dir }} --html
+
+open-coverage: test
+    open {{ cov_dir }}/html/index.html

@@ -15,6 +15,8 @@ export const GeoNameSchema = z.object({
   accuracy: z.coerce.number(),
 });
 
+export const ErrorResponseSchema = z.object({ error: z.array(z.string()) });
+
 export const GEO_COLUMNS = [
   "country_code",
   "postal_code",

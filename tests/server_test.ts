@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertNotEquals } from "../dev_deps.ts";
 import { Status } from "../deps.ts";
 import { app } from "../src/server.ts";
-import { GeoNameSchema } from "../src/schemas.ts";
+import { ErrorResponseSchema, GeoNameSchema } from "../src/schemas.ts";
 
 function createRequest(path: string) {
   return new Request(`http://localhost:8000${path}`);
@@ -34,6 +34,31 @@ Deno.test("info route", {}, async (t) => {
   });
 });
 
+Deno.test("info route bad country", {}, async () => {
+  const req = createRequest("/api/AB/info/93109/");
+  const res = await app.request(req);
+  assertEquals(res.status, Status.BadRequest);
+  const data = await res.json();
+  ErrorResponseSchema.parse(data);
+});
+
+Deno.test("info route bad code", {}, async (t) => {
+  await t.step("US", async () => {
+    const req = createRequest("/api/US/info/ABCDEF/");
+    const res = await app.request(req);
+    assertEquals(res.status, Status.BadRequest);
+    const data = await res.json();
+    ErrorResponseSchema.parse(data);
+  });
+  await t.step("CA", async () => {
+    const req = createRequest("/api/CA/info/ABCDEF/");
+    const res = await app.request(req);
+    assertEquals(res.status, Status.BadRequest);
+    const data = await res.json();
+    ErrorResponseSchema.parse(data);
+  });
+});
+
 Deno.test("distance route", {}, async (t) => {
   await t.step("US", async () => {
     const req = createRequest("/api/US/distance/93109/02119/");
@@ -52,6 +77,45 @@ Deno.test("distance route", {}, async (t) => {
     GeoNameSchema.parse(data.start);
     GeoNameSchema.parse(data.end);
     assert(typeof data.distance === "number");
+  });
+});
+
+Deno.test("distance route bad country", {}, async () => {
+  const req = createRequest("/api/AB/distance/93109/02119/");
+  const res = await app.request(req);
+  assertEquals(res.status, Status.BadRequest);
+  const data = await res.json();
+  ErrorResponseSchema.parse(data);
+});
+
+Deno.test("distance route bad codes", {}, async (t) => {
+  await t.step("US one bad code", async () => {
+    const req = createRequest("/api/US/distance/ABCDEF/93109/");
+    const res = await app.request(req);
+    assertEquals(res.status, Status.BadRequest);
+    const data = await res.json();
+    ErrorResponseSchema.parse(data);
+  });
+  await t.step("US two bad codes", async () => {
+    const req = createRequest("/api/US/distance/ABCDEF/GHIJKL/");
+    const res = await app.request(req);
+    assertEquals(res.status, Status.BadRequest);
+    const data = await res.json();
+    ErrorResponseSchema.parse(data);
+  });
+  await t.step("CA one bad code", async () => {
+    const req = createRequest("/api/CA/distance/ABCDEF/T0A/");
+    const res = await app.request(req);
+    assertEquals(res.status, Status.BadRequest);
+    const data = await res.json();
+    ErrorResponseSchema.parse(data);
+  });
+  await t.step("CA two bad codes", async () => {
+    const req = createRequest("/api/CA/distance/ABCDEF/GHIJKL/");
+    const res = await app.request(req);
+    assertEquals(res.status, Status.BadRequest);
+    const data = await res.json();
+    ErrorResponseSchema.parse(data);
   });
 });
 
@@ -134,6 +198,14 @@ Deno.test("random route CA with different seed", {}, async () => {
   const code2 = GeoNameSchema.parse(data2);
   assertEquals(code2.country_code, "CA");
   assertNotEquals(code1.postal_code, code2.postal_code);
+});
+
+Deno.test("random route bad country", {}, async () => {
+  const req = createRequest("/api/AB/random/");
+  const res = await app.request(req);
+  assertEquals(res.status, Status.BadRequest);
+  const data = await res.json();
+  ErrorResponseSchema.parse(data);
 });
 
 Deno.test("health check route", {}, async () => {
