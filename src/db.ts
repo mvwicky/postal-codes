@@ -9,7 +9,7 @@ const KEY_PREFIX = `${PREFIX}:${VERSION}`;
 let _db: redis.Redis | null = null;
 
 async function getDB(): Promise<redis.Redis> {
-  if (!_db) {
+  if (!_db || _db.isClosed) {
     const dbURL = Deno.env.get("REDIS_URL") ?? "redis://127.0.0.1:6379";
     _db = await redis.connect(redis.parseURL(dbURL));
   }
@@ -19,22 +19,6 @@ async function getDB(): Promise<redis.Redis> {
 function close() {
   _db?.close();
   _db = null;
-}
-
-async function get(key: string): Promise<string | null> {
-  const db = await getDB();
-  const value = await db.get(key);
-  return value;
-}
-
-async function set(
-  key: string,
-  value: string,
-  opts?: redis.SetOpts,
-): Promise<string> {
-  const db = await getDB();
-  const ret = await db.set(key, value, opts);
-  return ret;
 }
 
 function makeCountryPrefix(country: string): string {
@@ -53,7 +37,7 @@ async function setCodeData(
   country: string,
   codeData: GeoName,
 ): Promise<[number, number]> {
-  const db = await getDB();
+  using db = await getDB();
   const key = makeCodeKey(country, codeData.postal_code);
   const [hret, sret] = await Promise.all([
     db.hset(key, codeData),
@@ -66,7 +50,7 @@ async function getCodeData(
   country: string,
   code: string,
 ): Promise<GeoName | null> {
-  const db = await getDB();
+  using db = await getDB();
   const key = makeCodeKey(country, code);
   const data = await db.hgetall(key);
   if (data.length) {
@@ -80,19 +64,33 @@ async function getCodeData(
 }
 
 async function getRandomCode(country: string): Promise<GeoName | null> {
-  const db = await getDB();
+  using db = await getDB();
   const code = await db.srandmember(makeAllCodesKey(country));
   return code ? getCodeData(country, code) : null;
 }
 
+async function countryExists(country: string): Promise<boolean> {
+  using db = await getDB();
+  const pattern = `${makeCountryPrefix(country)}:*`;
+  const [_, results] = await db.scan(0, { pattern, count: 1 });
+  return !!results.length;
+}
+
+async function getAllCodes(country: string): Promise<string[]> {
+  using db = await getDB();
+  const key = makeAllCodesKey(country);
+  const res = await db.sort(key, { alpha: true });
+  return res;
+}
+
 export {
   close,
-  get,
+  countryExists,
+  getAllCodes,
   getCodeData,
   getDB,
   getRandomCode,
   makeAllCodesKey,
   makeCodeKey,
-  set,
   setCodeData,
 };

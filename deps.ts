@@ -9,7 +9,7 @@ export { format as dFormat } from "std/fmt/duration.ts";
 export { ensureDir } from "std/fs/ensure_dir.ts";
 export { exists } from "std/fs/exists.ts";
 export { walk, type WalkOptions } from "std/fs/walk.ts";
-export { Status } from "std/http/http_status.ts";
+export { STATUS_CODE } from "std/http/status.ts";
 export * as path from "std/path/mod.ts";
 export { readAll } from "std/streams/read_all.ts";
 
@@ -29,6 +29,6 @@ export {
 export { default as yauzl } from "npm:yauzl@2.10.0";
 
 export { cors } from "https://deno.land/x/hono@v3.9.0/middleware/cors/index.ts";
-export * as hono from "https://deno.land/x/hono@v3.9.0/mod.ts";
+export { Hono } from "https://deno.land/x/hono@v3.9.0/mod.ts";
 
 export * as redis from "https://deno.land/x/redis@v0.32.0/mod.ts";

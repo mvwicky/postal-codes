@@ -1,7 +1,7 @@
 set shell := ["bash", "-uc"]
 
 deps_files := "deps.ts dev_deps.ts"
-entry_files := "main.ts cli.ts"
+entry_files := "main.ts cli.ts tests/data_test.ts tests/server_test.ts"
 deno := "deno"
 podman := "podman"
 img_name := "postal-codes"
