@@ -3,7 +3,9 @@ import { countryExists, getAllCodes, getCodeData } from "./db.ts";
 import { hDist } from "./distance.ts";
 import { logger } from "./log.ts";
 import { Alea, DEFAULT_URNG16 } from "./rand.ts";
-import { logMemory, toPoint } from "./utils.ts";
+import { logMemory, normKey, toPoint } from "./utils.ts";
+
+const allCodesCache = new Map<string, string[]>();
 
 const countryErrorString = (countryParam: string) =>
   `Unknown country: ${countryParam}`;
@@ -55,7 +57,14 @@ const countryApp = new Hono()
     const log = logger();
     const { country } = c.req.param();
     log.debug(`Country: ${country}`);
-    const countryData = await getAllCodes(country);
+    const countryKey = normKey(country);
+    let countryData = allCodesCache.get(countryKey);
+    if (!countryData) {
+      countryData = await getAllCodes(countryKey);
+      if (countryData.length) {
+        allCodesCache.set(countryKey, countryData);
+      }
+    }
     log.debug(`Country Data: ${countryData.length}`);
     if (countryData.length) {
       const seed = c.req.query("seed") || DEFAULT_URNG16.value;
