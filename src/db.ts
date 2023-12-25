@@ -63,12 +63,6 @@ async function getCodeData(
   }
 }
 
-async function getRandomCode(country: string): Promise<GeoName | null> {
-  using db = await getDB();
-  const code = await db.srandmember(makeAllCodesKey(country));
-  return code ? getCodeData(country, code) : null;
-}
-
 async function countryExists(country: string): Promise<boolean> {
   using db = await getDB();
   const pattern = `${makeCountryPrefix(country)}:*`;
@@ -89,7 +83,6 @@ export {
   getAllCodes,
   getCodeData,
   getDB,
-  getRandomCode,
   makeAllCodesKey,
   makeCodeKey,
   setCodeData,
