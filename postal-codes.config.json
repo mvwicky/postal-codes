@@ -2,6 +2,6 @@
   "dataDir": "data",
   "downloadMaxAge": 864000000,
   "$test": {
-    "dataDir": "_data"
+    "dataDir": "tmp/data"
   }
 }

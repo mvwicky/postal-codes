@@ -18,7 +18,7 @@ async function distance(args: string[], log: ConsolaInstance) {
     return 1;
   }
   const endUsage = Deno.memoryUsage();
-  logMemory(startUsage, endUsage, "debug", log);
+  logMemory(startUsage, endUsage, { level: "debug", log });
   const [code1, code2] = args;
   const c1 = entryMap.get(code1);
   if (!c1) {
@@ -54,12 +54,12 @@ async function populateDB(args: string[], log: ConsolaInstance) {
     return 1;
   }
   const failures: string[] = [];
+  const startMem = Deno.memoryUsage();
   for (const code of countryData.values()) {
-    const [hret, sret] = await db.setCodeData(country, code);
-    if (!hret || !sret) {
-      failures.push(code.postal_code);
-    }
+    await db.setCodeData(country, code);
   }
+  log.info(`Done loading`);
+  logMemory(startMem, Deno.memoryUsage(), { level: "debug", log });
   const conn = await db.getDB();
   const allCodesCard = await conn.scard(db.makeAllCodesKey(country));
   if (allCodesCard !== countryData.size) {
@@ -93,7 +93,7 @@ if (import.meta.main) {
   const [cmd, ...rest] = Deno.args;
   const cmdFunction = COMMANDS.get(cmd);
   if (!cmdFunction) {
-    log.warn(`Unkown command "${cmd}".`);
+    log.warn(`Unknown command "${cmd}".`);
     log.warn(`Command must be one of: ${[...COMMANDS.keys()].join(", ")}.`);
     Deno.exit(1);
   }

@@ -35,7 +35,10 @@ const countryApp = new Hono()
       getCodeData(country, start),
       getCodeData(country, end),
     ]);
-    if (startInfo && endInfo) {
+    if (
+      startInfo && endInfo && !(startInfo instanceof Error) &&
+      !(endInfo instanceof Error)
+    ) {
       const distance = hDist(toPoint(startInfo), toPoint(endInfo));
       return c.json({ start: startInfo, end: endInfo, distance });
     } else {

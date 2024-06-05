@@ -1,3 +1,4 @@
+import { z } from "../deps.ts";
 import { chunk, redis } from "../deps.ts";
 import { type GeoName, GeoNameSchema } from "./schemas.ts";
 import { normKey } from "./utils.ts";
@@ -22,7 +23,7 @@ function close() {
 }
 
 function makeCountryPrefix(country: string): string {
-  return `${PREFIX}:${VERSION}:${normKey(country)}`;
+  return `${KEY_PREFIX}:${normKey(country)}`;
 }
 
 function makeCodeKey(country: string, code: string): string {
@@ -36,20 +37,23 @@ function makeAllCodesKey(country: string): string {
 async function setCodeData(
   country: string,
   codeData: GeoName,
-): Promise<[number, number]> {
+) {
   using db = await getDB();
   const key = makeCodeKey(country, codeData.postal_code);
-  const [hret, sret] = await Promise.all([
-    db.hset(key, codeData),
-    db.sadd(makeAllCodesKey(country), codeData.postal_code),
-  ]);
+  const pl = db.pipeline();
+  const trimmedData = Object.entries(codeData).filter(([_, value]) =>
+    !(typeof value === "string" && value.length === 0)
+  );
+  pl.hset(key, ...trimmedData);
+  pl.sadd(makeAllCodesKey(country), codeData.postal_code);
+  const [hret, sret] = await pl.flush();
   return [hret, sret];
 }
 
 async function getCodeData(
   country: string,
   code: string,
-): Promise<GeoName | null> {
+): Promise<GeoName | z.ZodError<GeoName> | null> {
   using db = await getDB();
   const key = makeCodeKey(country, code);
   const data = await db.hgetall(key);
@@ -57,7 +61,7 @@ async function getCodeData(
     const codeData = GeoNameSchema.safeParse(
       Object.fromEntries(chunk(data, 2)),
     );
-    return codeData.success ? codeData.data : null;
+    return codeData.success ? codeData.data : codeData.error;
   } else {
     return null;
   }
