@@ -48,7 +48,7 @@ rm-container:
 
 [doc("Cache deno dependencies")]
 cache-deps:
-	{{ deno }} install --lock={{ lock_file }} {{ deps_files }}
+	{{ deno }} install --lock={{ lock_file }}
 
 [doc("Cache deno dependencies from scratch")]
 reload-deps:

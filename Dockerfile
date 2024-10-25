@@ -2,9 +2,9 @@ FROM denoland/deno:2.0.0
 EXPOSE 8000
 WORKDIR /app
 
-COPY deps.ts deno.jsonc deno.lock /app
-RUN ["deno", "cache", "deps.ts"]
+COPY deno.jsonc deno.lock /app
+RUN ["deno", "install", "--lock"]
 
-COPY main.ts /app
+COPY main.ts deps.ts /app
 COPY src /app/src
 CMD ["run", "-A", "main.ts"]
