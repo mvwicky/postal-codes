@@ -59,33 +59,6 @@ Deno.test(
 );
 
 Deno.test(
-  "load with DataLoader",
-  { permissions, sanitizeResources: false, ignore: true },
-  async (t) => {
-    await t.step({
-      name: "US data",
-      fn: async () => {
-        const loader = await DataLoader.create("US");
-        assertInstanceOf(loader, DataLoader);
-        const data = await loader.load();
-        assertInstanceOf(data, Map);
-        assertNotEquals(data.size, 0);
-      },
-    });
-    await t.step({
-      name: "CA data",
-      fn: async () => {
-        const loader = await DataLoader.create("CA");
-        assertInstanceOf(loader, DataLoader);
-        const data = await loader.load();
-        assertInstanceOf(data, Map);
-        assertNotEquals(data.size, 0);
-      },
-    });
-  },
-);
-
-Deno.test(
   "fetch timeout",
   { permissions, sanitizeResources: true },
   async () => {
