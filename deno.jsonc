@@ -29,5 +29,9 @@
   "test": {
     "include": ["tests/"]
   },
-  "frozen": true
+  "frozen": true,
+  "compilerOptions": {
+    "jsx": "precompile",
+    "jsxImportSource": "@hono/hono/jsx"
+  }
 }

@@ -41,18 +41,17 @@ class DataLoader {
     country: string,
     params: CountryParams,
     config: Config,
-    options: Partial<LoadOptions> = {},
+    {
+      forceReload = false,
+      timeout = config.defaultTimeout,
+      maxAge = config.downloadMaxAge,
+      cache = defaultCache,
+    }: Partial<LoadOptions> = {},
   ) {
     this.#name = country;
     this.#params = params;
     this.#log = logger().withTag(`${this.#name}-data`);
-    this.#options = {
-      forceReload: false,
-      cache: defaultCache,
-      timeout: config.defaultTimeout,
-      maxAge: config.downloadMaxAge,
-      ...options,
-    };
+    this.#options = { cache, timeout, maxAge, forceReload };
     this.#dataDir = path.resolve(Deno.cwd(), config.dataDir);
     this.#file = path.join(this.#dataDir, params.outputFileName);
   }
