@@ -2,9 +2,9 @@ import { type ConsolaInstance, createConsola } from "../deps.ts";
 
 let _log: ConsolaInstance | undefined;
 
-export function logger(): ConsolaInstance {
+export function logger(tag?: string): ConsolaInstance {
   if (!_log) {
     _log = createConsola({});
   }
-  return _log;
+  return tag ? _log.withTag(tag) : _log;
 }

@@ -1,7 +1,7 @@
 import { logger } from "./log.ts";
 import { decodeString } from "./decode-string.ts";
 
-type XoroshiroState = [bigint, bigint];
+type XoroState = [bigint, bigint];
 
 abstract class RNGBase {
   abstract get value(): number;
@@ -148,45 +148,49 @@ class Alea {
 const DEFAULT_URNG32 = new URNG_32();
 const DEFAULT_URNG16 = new URNG_16();
 
-const DEFAULT_SEED: XoroshiroState = [
-  BigInt("0xdeadbeefcafebabe"),
-  BigInt("0x8badf00dbaada555"),
+const DEFAULT_SEED: XoroState = [
+  0xdeadbeefcafebaben,
+  0x8badf00dbaada555n,
 ];
 
-async function makeSeed(s: string): Promise<number> {
+function makeSeed(s: string): number {
   const decoded = decodeString(s);
-  const asBytes = Uint8Array.from(decoded);
-  await crypto.subtle.digest("SHA-512", asBytes);
-  const rawCode = [...s].reduce((a, b) => a ^ b.charCodeAt(0), 0);
+  const rawCode = [...decoded].reduce((a, b) => a ^ b, 0);
   return (rawCode << 2) | 1;
 }
 
-async function toX128State(
-  seed?: XoroshiroState | number | string,
-): Promise<XoroshiroState> {
+function toX128State(seed?: XoroState | number | string): XoroState {
   if (typeof seed === "number") {
     return [BigInt(seed), DEFAULT_SEED[1]];
   } else if (typeof seed === "string") {
-    return toX128State(await makeSeed(seed));
+    return toX128State(makeSeed(seed));
   }
   return seed ?? DEFAULT_SEED;
 }
 
-async function* xoroshiro128plus(
-  seed?: XoroshiroState | number | string,
-): AsyncGenerator<bigint, void, unknown> {
-  const s: XoroshiroState = await toX128State(seed);
-  console.log({ s });
+function* xoroshiro128plus(
+  seed?: XoroState | number | string,
+): Generator<bigint, void, unknown> {
+  const s: XoroState = toX128State(seed);
+  const log = logger("xoroshiro128plu");
+  log.debug({ s });
   while (true) {
     const s0 = s[0];
     let s1 = s[1];
     const result = s0 + s1;
-    console.log(result);
+    log.debug(result);
     s1 ^= s0;
-    s[0] = ((s0 << BigInt(24)) | (s0 >> BigInt(40))) ^ s1 ^ (s1 << BigInt(16));
-    s[1] = (s1 << BigInt(37)) | (s1 >> BigInt(27));
+    s[0] = ((s0 << 24n) | (s0 >> 40n)) ^ s1 ^ (s1 << 16n);
+    s[1] = (s1 << 37n) | (s1 >> 27n);
     yield BigInt.asUintN(64, result);
   }
 }
 
-export { Alea, DEFAULT_URNG16, DEFAULT_URNG32, URNG_32, xoroshiro128plus };
+export {
+  Alea,
+  DEFAULT_URNG16,
+  DEFAULT_URNG32,
+  URNG_16,
+  URNG_32,
+  xoroshiro128plus,
+};
