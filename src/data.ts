@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Data downloading/extraction
+ *
+ * @todo Don't extract and store data. Just keep the ZIP file around.
+ */
+
 import {
   type ConsolaInstance,
   createWriteStream,
@@ -15,9 +21,7 @@ import * as zip from "./zipfiles.ts";
 type CountryData = Map<string, GeoName>;
 type CacheType = Map<string, CountryData>;
 type LoadOptions = {
-  timeout?: number;
-  forceReload: boolean;
-  cache?: CacheType;
+  fetchTimeout?: number;
   maxAge: number;
 };
 
@@ -30,7 +34,7 @@ async function checkCountry(country: string): Promise<string | null> {
 }
 
 class DataLoader {
-  readonly #name: string;
+  readonly name: string;
   readonly #params: CountryParams;
   readonly #log: ConsolaInstance;
   readonly #options: Required<LoadOptions>;
@@ -42,16 +46,14 @@ class DataLoader {
     params: CountryParams,
     config: Config,
     {
-      forceReload = false,
-      timeout = config.defaultTimeout,
+      fetchTimeout = config.defaultTimeout,
       maxAge = config.downloadMaxAge,
-      cache = defaultCache,
     }: Partial<LoadOptions> = {},
   ) {
-    this.#name = country;
+    this.name = country;
     this.#params = params;
-    this.#log = logger().withTag(`${this.#name}-data`);
-    this.#options = { cache, timeout, maxAge, forceReload };
+    this.#log = logger().withTag(`${this.name}-data`);
+    this.#options = { fetchTimeout, maxAge };
     this.#dataDir = path.resolve(Deno.cwd(), config.dataDir);
     this.#file = path.join(this.#dataDir, params.outputFileName);
   }
@@ -72,17 +74,6 @@ class DataLoader {
   }
 
   async load(): Promise<CountryData | null> {
-    const { forceReload, cache } = this.#options;
-    if (forceReload) {
-      this.#log.info("Clearing cache.");
-      cache.delete(this.#name);
-    } else {
-      const cachedData = cache.get(this.#name);
-      if (cachedData) {
-        this.#log.info("Data was cached.");
-        return cachedData;
-      }
-    }
     this.#log.debug(`Data file path: ${this.#file}`);
     const shouldFetch = await this.checkShouldFetch();
     if (shouldFetch) {
@@ -106,11 +97,7 @@ class DataLoader {
     for await (const [key, entry] of this.parse(fd)) {
       data.set(key, entry);
     }
-    const { size } = data;
-    if (size) {
-      cache.set(this.#name, data);
-    }
-    return size ? data : null;
+    return data.size ? data : null;
   }
 
   private async checkShouldFetch(): Promise<boolean> {
@@ -125,7 +112,7 @@ class DataLoader {
         units: ["days", "seconds", "milliseconds"],
       });
       this.#log.debug(`File age: ${Deno.inspect(age)} (max: ${maxAge})`);
-      return maxAge < age.milliseconds!;
+      return age.milliseconds! > maxAge;
     } catch (err) {
       if (err instanceof Deno.errors.NotFound) {
         this.#log.info("File not found.");
@@ -135,10 +122,10 @@ class DataLoader {
   }
 
   private async fetch(): Promise<ArrayBuffer | null> {
-    const { timeout } = this.#options;
-    this.#log.debug("Timeout", timeout);
-    const signal = Number.isFinite(timeout)
-      ? AbortSignal.timeout(timeout)
+    const { fetchTimeout } = this.#options;
+    this.#log.debug("Timeout", fetchTimeout);
+    const signal = Number.isFinite(fetchTimeout)
+      ? AbortSignal.timeout(fetchTimeout)
       : undefined;
     this.#log.info(`Fetching country data`);
     try {
@@ -216,10 +203,31 @@ class DataLoader {
 
 async function loadCountryData(
   country: string,
-  options: Partial<LoadOptions> = {},
+  { cache = defaultCache, forceReload = false, ...options }: Partial<
+    LoadOptions & { cache: CacheType; forceReload: boolean }
+  > = {},
 ): Promise<CountryData | null> {
   const loader = await DataLoader.create(country, options);
-  return loader?.load() ?? null;
+  if (loader) {
+    const log = logger().withTag(`${loader.name}-data`);
+    if (forceReload) {
+      log.info("Cache cleared.");
+      cache.delete(loader.name);
+    } else {
+      const cachedData = cache.get(loader.name);
+      if (cachedData) {
+        log.info("Data was cached.");
+        return cachedData;
+      }
+    }
+    const data = await loader.load();
+    if (data?.size) {
+      cache.set(loader.name, data);
+      return data;
+    }
+    return null;
+  }
+  return null;
 }
 
 export { DataLoader, loadCountryData };

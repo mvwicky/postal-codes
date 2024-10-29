@@ -4,7 +4,7 @@ import {
   assertNotEquals,
 } from "../dev_deps.ts";
 import { type Config, getConfig } from "../src/config.ts";
-import { DataLoader, loadCountryData } from "../src/data.ts";
+import { loadCountryData } from "../src/data.ts";
 
 const permissions = {
   net: true,
@@ -37,12 +37,11 @@ Deno.test("patch config", async () => {
 
 Deno.test(
   "load",
-  { sanitizeResources: false },
   async (t) => {
     await t.step("US data", async () => {
       const data = await loadCountryData("US", {
         forceReload: true,
-        timeout: Infinity,
+        fetchTimeout: Infinity,
       });
       assertInstanceOf(data, Map);
       assertNotEquals(data.size, 0);
@@ -50,7 +49,7 @@ Deno.test(
     await t.step("CA data", async () => {
       const data = await loadCountryData("CA", {
         forceReload: true,
-        timeout: Infinity,
+        fetchTimeout: Infinity,
       });
       assertInstanceOf(data, Map);
       assertNotEquals(data.size, 0);
@@ -58,13 +57,37 @@ Deno.test(
   },
 );
 
+Deno.test("download data", { ignore: true }, async (t) => {
+  const { restore } = await patchConfig({ downloadMaxAge: 0 });
+  await t.step("US data", async () => {
+    const data = await loadCountryData("US", {
+      forceReload: true,
+      fetchTimeout: Infinity,
+    });
+    assertInstanceOf(data, Map);
+    assertNotEquals(data.size, 0);
+  });
+  await t.step("CA data", async () => {
+    const data = await loadCountryData("CA", {
+      forceReload: true,
+      fetchTimeout: Infinity,
+    });
+    assertInstanceOf(data, Map);
+    assertNotEquals(data.size, 0);
+  });
+  restore();
+});
+
 Deno.test(
   "fetch timeout",
   { permissions, sanitizeResources: true },
   async () => {
     const dataDir = await Deno.makeTempDir({ prefix: "postal-codes-" });
     const { restore } = await patchConfig({ dataDir });
-    const data = await loadCountryData("US", { forceReload: true, timeout: 1 });
+    const data = await loadCountryData("US", {
+      forceReload: true,
+      fetchTimeout: 1,
+    });
     assertEquals(data, null);
     restore();
   },
