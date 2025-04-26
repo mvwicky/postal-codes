@@ -2,6 +2,10 @@
 
 Where I figure out postal code parsing.
 
+## TODO
+
+- [ ] Reverse lookup. Enter a place name or coordinates and return the closest postal code.
+
 ## Data Sources
 
 - [ODA](./data/ODA_QC_v1.zip): Quebec specific Canadian postal code data. (Huge
