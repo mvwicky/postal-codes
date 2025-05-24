@@ -13,7 +13,6 @@
     "@std/fmt": "jsr:@std/fmt@^1.0.2",
     "@std/fs": "jsr:@std/fs@^1.0.4",
     "@std/http": "jsr:@std/http@^1.0.8",
-    "@std/log": "jsr:@std/log@^0.224.9",
     "@std/path": "jsr:@std/path@^1.0.6",
     "@types/yauzl": "npm:@types/yauzl@^2.10.3",
     "c12": "npm:c12@^2.0.1",

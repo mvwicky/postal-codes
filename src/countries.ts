@@ -1,6 +1,8 @@
 export interface CountryParams {
   /** Where to fetch the data. */
   url: URL;
+  /** The name of the downloaded zip file. */
+  zipFileName: string;
   /** The name of the data file within the zip file. */
   dataFileName: string;
   /** The name of the data file when written to disk locally. */
@@ -15,6 +17,7 @@ const COUNTRIES: Map<string, Readonly<CountryParams>> = new Map(
       "CA",
       {
         url: new URL("CA.zip", urlPrefix),
+        zipFileName: "CA3.zip",
         dataFileName: "CA.txt",
         outputFileName: "CA3.txt",
       },
@@ -23,6 +26,7 @@ const COUNTRIES: Map<string, Readonly<CountryParams>> = new Map(
       "CA6",
       {
         url: new URL("CA_full.csv.zip", urlPrefix),
+        zipFileName: "CA6.zip",
         dataFileName: "CA_full.txt",
         outputFileName: "CA6.txt",
       },
@@ -31,6 +35,7 @@ const COUNTRIES: Map<string, Readonly<CountryParams>> = new Map(
       "US",
       {
         url: new URL("US.zip", urlPrefix),
+        zipFileName: "US.zip",
         dataFileName: "US.txt",
         outputFileName: "US.txt",
       },
