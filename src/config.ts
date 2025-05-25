@@ -27,7 +27,7 @@ export async function loadConfig(): Promise<Config> {
     defaults: DEFAULT_CONFIG,
     envName: Deno.env.get("POSTAL_CODE_ENV"),
   });
-  return config ?? DEFAULT_CONFIG;
+  return config!;
 }
 
 export async function getConfig(): Promise<Config> {

@@ -1,8 +1,8 @@
-import { bFormat, type ConsolaInstance, dFormat } from "./deps.ts";
+import { type ConsolaInstance, dFormat } from "./deps.ts";
 import { loadCountryData } from "./src/data.ts";
 import { hDist } from "./src/distance.ts";
 import { logger } from "./src/log.ts";
-import { logMemory, normKey, toPoint } from "./src/utils.ts";
+import { logMemory, toPoint } from "./src/utils.ts";
 
 async function distance(args: string[], log: ConsolaInstance) {
   if (args.length < 2) {

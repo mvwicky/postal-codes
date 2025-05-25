@@ -76,16 +76,13 @@ lint:
 
 [group("deno")]
 [doc("Run automated tests")]
-test: && _coverage
+test:
 	{{ deno }} test --fail-fast=1 --coverage={{ cov_dir }} -A
 
 [group("deno")]
 [doc("Run automated tests (with filtering)")]
-testf filter: && _coverage
-	{{ deno }} test --fail-fast=1 --coverage={{ cov_dir }} --filter={{ filter }} -A
-
-_coverage:
-	{{ deno }} coverage {{ cov_dir }} --html
+testf filter:
+	{{ deno }} test --fail-fast=1 --coverage={{ cov_dir }} --filter="{{ filter }}" -A
 
 [group("deno")]
 [doc("Open generated coverage file")]

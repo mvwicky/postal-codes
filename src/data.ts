@@ -4,13 +4,7 @@
  * @todo Don't extract and store data. Just keep the ZIP file around.
  */
 
-import {
-  type ConsolaInstance,
-  createWriteStream,
-  csv,
-  difference,
-  path,
-} from "../deps.ts";
+import { type ConsolaInstance, createWriteStream, csv, path } from "../deps.ts";
 import { type Config, getConfig } from "./config.ts";
 import { COUNTRIES, type CountryParams } from "./countries.ts";
 import { logger } from "./log.ts";
@@ -22,6 +16,7 @@ type CountryData = Map<string, GeoName>;
 type CacheType = Map<string, CountryData>;
 type LoadOptions = {
   fetchTimeout?: number;
+  /** Maximum age of downloaded file in milliseconds. */
   maxAge: number;
 };
 
@@ -35,11 +30,13 @@ async function checkCountry(country: string): Promise<string | null> {
 
 class DataLoader {
   readonly name: string;
-  readonly #params: CountryParams;
+  readonly #url: URL;
+  readonly #dataFileName: string;
   readonly #log: ConsolaInstance;
   readonly #options: Required<LoadOptions>;
   readonly #dataDir: string;
   readonly #file: string;
+  readonly #zipFile: string;
 
   constructor(
     country: string,
@@ -51,10 +48,12 @@ class DataLoader {
     }: Partial<LoadOptions> = {},
   ) {
     this.name = country;
-    this.#params = params;
+    this.#url = params.url;
+    this.#dataFileName = params.dataFileName;
     this.#log = logger().withTag(`${this.name}-data`);
     this.#options = { fetchTimeout, maxAge };
     this.#dataDir = path.resolve(Deno.cwd(), config.dataDir);
+    this.#zipFile = path.join(this.#dataDir, params.zipFileName);
     this.#file = path.join(this.#dataDir, params.outputFileName);
   }
 
@@ -67,6 +66,7 @@ class DataLoader {
       const params = COUNTRIES.get(cNorm);
       if (params) {
         const config = await getConfig();
+        console.log(config);
         return new this(cNorm, params, config, options);
       }
     }
@@ -93,7 +93,7 @@ class DataLoader {
       this.#log.debug(`File already exists.`);
     }
     const data: CountryData = new Map();
-    const fd = await Deno.open(this.#file);
+    using fd = await Deno.open(this.#file);
     for await (const [key, entry] of this.parse(fd)) {
       data.set(key, entry);
     }
@@ -104,15 +104,13 @@ class DataLoader {
     const now = new Date();
     try {
       const { maxAge } = this.#options;
-      const fd = await Deno.open(this.#file);
+      using fd = await Deno.open(this.#file);
       const stat = await fd.stat();
       fd.close();
       const mtime = stat.mtime ?? now;
-      const age = difference(now, mtime, {
-        units: ["days", "seconds", "milliseconds"],
-      });
-      this.#log.debug(`File age: ${Deno.inspect(age)} (max: ${maxAge})`);
-      return age.milliseconds! > maxAge;
+      const age = now.valueOf() - mtime.valueOf();
+      this.#log.debug(`File age: ${age} (max: ${maxAge})`);
+      return age > maxAge;
     } catch (err) {
       if (err instanceof Deno.errors.NotFound) {
         this.#log.info("File not found.");
@@ -129,7 +127,7 @@ class DataLoader {
       : undefined;
     this.#log.info(`Fetching country data`);
     try {
-      const res = await fetch(this.#params.url, { signal });
+      const res = await fetch(this.#url, { signal });
       if (res.ok && res.body) {
         const arrBuf = await res.arrayBuffer();
         return arrBuf;
@@ -144,7 +142,6 @@ class DataLoader {
 
   private async extract(buf: ArrayBuffer): Promise<string | null> {
     this.#log.info(`Extracting zipped data.`);
-    const { dataFileName } = this.#params;
     const zipFile = await zip.fromBuffer(buf, { lazyEntries: true });
     const openReadStream = zip.makeOpenReadStream(zipFile);
     return new Promise((resolve, reject) => {
@@ -152,7 +149,7 @@ class DataLoader {
       zipFile.on("entry", async (e) => {
         const entry = e as zip.yauzl.Entry;
         this.#log.info(`Got entry: ${entry.fileName}`);
-        if (entry.fileName === dataFileName) {
+        if (entry.fileName === this.#dataFileName) {
           this.#log.info(`Entry matches data file name`);
           const stream = await openReadStream(entry);
           const outFile = createWriteStream(this.#file);

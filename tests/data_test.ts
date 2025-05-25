@@ -38,6 +38,8 @@ Deno.test("patch config", async () => {
 Deno.test(
   "load",
   async (t) => {
+    const dataDir = await Deno.makeTempDir({ prefix: "postal-codes-" });
+    const { restore } = await patchConfig({ dataDir });
     await t.step("US data", async () => {
       const data = await loadCountryData("US", {
         forceReload: true,
@@ -54,11 +56,13 @@ Deno.test(
       assertInstanceOf(data, Map);
       assertNotEquals(data.size, 0);
     });
+    restore();
   },
 );
 
-Deno.test("download data", { ignore: true }, async (t) => {
-  const { restore } = await patchConfig({ downloadMaxAge: 0 });
+Deno.test("download data", { ignore: false }, async (t) => {
+  const dataDir = await Deno.makeTempDir({ prefix: "postal-codes-" });
+  const { restore } = await patchConfig({ downloadMaxAge: 0, dataDir });
   await t.step("US data", async () => {
     const data = await loadCountryData("US", {
       forceReload: true,
