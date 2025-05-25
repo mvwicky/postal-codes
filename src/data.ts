@@ -119,7 +119,7 @@ class DataLoader {
     }
   }
 
-  private async fetch(): Promise<Uint8Array | null> {
+  private async fetch(): Promise<ArrayBuffer | null> {
     const { fetchTimeout } = this.#options;
     this.#log.debug("Timeout", fetchTimeout);
     const signal = Number.isFinite(fetchTimeout)
@@ -129,7 +129,7 @@ class DataLoader {
     try {
       const res = await fetch(this.#url, { signal });
       if (res.ok && res.body) {
-        const arrBuf = await res.bytes();
+        const arrBuf = await res.arrayBuffer();
         return arrBuf;
       } else {
         this.#log.warn(`Fetch error: "${res.statusText}"`);
@@ -140,16 +140,7 @@ class DataLoader {
     return null;
   }
 
-  private async saveZIP(res: Response) {
-    try {
-      using fd = await Deno.open(this.#zipFile, { write: true });
-      await res.body?.pipeTo(fd.writable);
-    } catch (err) {
-      this.#log.error("Error", err);
-    }
-  }
-
-  private async extract(buf: Uint8Array): Promise<string | null> {
+  private async extract(buf: ArrayBuffer): Promise<string | null> {
     this.#log.info(`Extracting zipped data.`);
     const zipFile = await zip.fromBuffer(buf, { lazyEntries: true });
     const openReadStream = zip.makeOpenReadStream(zipFile);

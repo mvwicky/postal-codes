@@ -1,9 +1,10 @@
 import { NodeBuffer, type Readable, yauzl } from "../deps.ts";
 
 export function fromBuffer(
-  buf: NodeBuffer | Uint8Array,
+  buf: NodeBuffer | Uint8Array | ArrayBuffer | SharedArrayBuffer,
   options: yauzl.Options = {},
 ): Promise<yauzl.ZipFile> {
+  //@ts-expect-error: This should work
   const buffer = NodeBuffer.isBuffer(buf) ? buf : NodeBuffer.from(buf);
   return new Promise((resolve, reject) => {
     yauzl.fromBuffer(buffer, options, (err, resp) => {
