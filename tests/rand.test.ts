@@ -4,7 +4,6 @@ import { Alea, URNG_16, URNG_32, xoroshiro128plus } from "../src/rand.ts";
 
 describe("URNGs", async () => {
 	const URNGS = [URNG_16, URNG_32];
-
 	for (const urng of URNGS) {
 		test(`${urng.name} valueIn(stop)`, () => {
 			const r = new urng();
@@ -31,9 +30,17 @@ describe("URNGs", async () => {
 });
 
 describe("xoroshiro128plus", async () => {
-	const seeds = [undefined, 12345, "abcedef"];
-	for (const seed of seeds) {
-		test(`seed: ${typeof seed}`, () => {
+	const seeds = [
+		[undefined, "undefined"],
+		[12345, "number"],
+		["abcedef", "normal characters"],
+		[
+			String.fromCharCode(0xd801) + String.fromCharCode(56320),
+			"supplemental characters",
+		],
+	] as const;
+	for (const [seed, name] of seeds) {
+		test(`seed: ${name}`, () => {
 			const g = xoroshiro128plus(seed);
 			g.next();
 			g.return();
@@ -43,11 +50,14 @@ describe("xoroshiro128plus", async () => {
 
 describe("ALEA", () => {
 	const seeds = [
-		"abcedef",
-		String.fromCharCode(0xd801) + String.fromCharCode(0xdc001),
-	];
-	for (const seed of seeds) {
-		test(`seed: ${typeof seed}`, () => {
+		["abcedef", "normal characters"],
+		[
+			String.fromCharCode(0xd801) + String.fromCharCode(0xdc001),
+			"supplemental characters",
+		],
+	] as const;
+	for (const [seed, name] of seeds) {
+		test(`seed: ${name}`, () => {
 			const g = new Alea(seed);
 			g.next();
 			g.int32();

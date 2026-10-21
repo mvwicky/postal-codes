@@ -1,12 +1,8 @@
 import { getConfig } from "./src/config.ts";
 import { logger } from "./src/log.ts";
-import { app } from "./src/server/server.ts";
+import { createServer } from "./src/server/bunserver.ts";
 
-const { server } = await getConfig();
+const config = await getConfig();
 
-const s = Bun.serve({
-	...server,
-	fetch: app.fetch,
-});
-
+const s = createServer(config);
 logger("server").info(`Listening on ${s.hostname}:${s.port}`);

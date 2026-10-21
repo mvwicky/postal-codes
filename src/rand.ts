@@ -88,6 +88,12 @@ class URNG_16 extends RNGBase {
 	}
 }
 
+function makeSeed(s: string): number {
+	const decoded = decodeString(s);
+	const rawCode = [...decoded].reduce((a, b) => a ^ b, 0);
+	return (rawCode << 2) | 1;
+}
+
 function makeMash() {
 	let n = 0xefc8249d;
 	return (data: string | number[]) => {
@@ -168,12 +174,6 @@ const DEFAULT_URNG32 = new URNG_32();
 const DEFAULT_URNG16 = new URNG_16();
 
 const DEFAULT_SEED: XoroState = [0xdeadbeefcafebaben, 0x8badf00dbaada555n];
-
-function makeSeed(s: string): number {
-	const decoded = decodeString(s);
-	const rawCode = [...decoded].reduce((a, b) => a ^ b, 0);
-	return (rawCode << 2) | 1;
-}
 
 function toX128State(seed?: XoroState | number | string): XoroState {
 	if (typeof seed === "number") {

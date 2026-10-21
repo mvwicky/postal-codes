@@ -12,6 +12,9 @@ lock_file := "./bun.lock"
 _default:
 	@just --list --justfile {{ justfile() }}
 
+dev:
+	{{ bun }} run --hot main.ts
+
 [group("containers")]
 [doc("Build Docker/Podman image")]
 build-image:

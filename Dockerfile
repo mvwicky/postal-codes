@@ -6,13 +6,13 @@ RUN ["bun", "install", "--frozen-lockfile"]
 
 COPY . .
 
-RUN ["bun", "build", "--target=bun", "--production", "--outdir=dist", "./server/index.ts"]
+RUN ["bun", "build", "--target=bun", "--production", "--outdir=dist", "./main.ts"]
 
 FROM oven/bun:1-slim
 EXPOSE 8000
 WORKDIR /usr/src/app
 
 COPY --from=base /usr/src/app/dist ./
-COPY --from=base /usr/src/app/public ./public
+# COPY --from=base /usr/src/app/public ./public
 
-CMD ["bun", "index.js"]
+CMD ["bun", "main.js"]
