@@ -1,6 +1,6 @@
 import { getConfig } from "./src/config.ts";
 import { logger } from "./src/log.ts";
-import { createServer } from "./src/server/bunserver.ts";
+import { createServer } from "./src/server/server.ts";
 
 const config = await getConfig();
 
