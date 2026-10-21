@@ -12,9 +12,6 @@ lock_file := "./bun.lock"
 _default:
 	@just --list --justfile {{ justfile() }}
 
-dev:
-	{{ bun }} run --hot main.ts
-
 [group("containers")]
 [doc("Build Docker/Podman image")]
 build-image:
@@ -52,6 +49,16 @@ stop-container:
 [doc("Destroy Docker/Podman container")]
 rm-container:
 	{{ podman }} rm {{ img_name }}
+
+[group("bun")]
+[doc("Run dev server")]
+dev:
+	{{ bun }} run --hot main.ts
+
+[group("bun")]
+[doc("Build for production")]
+build:
+	{{ bun }} build --target=bun --production --outdir=dist ./main.ts
 
 [group("bun")]
 [doc("Cache bun dependencies")]

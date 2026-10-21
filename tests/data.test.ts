@@ -34,7 +34,7 @@ test("patch config", async () => {
 	expect(config.config.dataDir).toEqual(dataDir);
 });
 
-describe("load", async () => {
+const useTempDir = () => {
 	let restore: (() => void) | null = null;
 	let dataDir: string | null = null;
 	beforeAll(async () => {
@@ -48,6 +48,10 @@ describe("load", async () => {
 			safeRm(dataDir);
 		}
 	});
+};
+
+describe("load", async () => {
+	useTempDir();
 
 	test("US data", async () => {
 		const data = await loadCountryData("US", {
@@ -68,19 +72,7 @@ describe("load", async () => {
 });
 
 describe("download data", async () => {
-	let restore: (() => void) | null = null;
-	let dataDir: string | null = null;
-	beforeAll(async () => {
-		dataDir = await fs.mkdtemp("postal-codes-");
-		const config = await patchConfig({ dataDir: dataDir });
-		restore = config.restore;
-	});
-	afterAll(() => {
-		restore?.();
-		if (dataDir) {
-			safeRm(dataDir);
-		}
-	});
+	useTempDir();
 
 	test("US data", async () => {
 		const data = await loadCountryData("US", {

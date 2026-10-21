@@ -225,7 +225,6 @@ async function loadCountryData(
 			cache.set(loader.name, data);
 			return data;
 		}
-		return null;
 	}
 	return null;
 }

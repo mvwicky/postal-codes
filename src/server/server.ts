@@ -69,7 +69,7 @@ const randomHandler = async (req: Bun.BunRequest<CountryRoute>) => {
 		const allCodes = [...countryData.keys()];
 		const seed =
 			new URL(req.url).searchParams.get("seed") || DEFAULT_URNG16.value;
-		log.debug("Seed=", seed);
+		log.debug("Seed:", seed);
 		const idx = new Alea(String(seed)).uint32() % allCodes.length;
 		log.debug("Index:", idx);
 		const code = allCodes[idx];

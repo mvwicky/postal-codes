@@ -1,25 +1,38 @@
-import { describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 
 import { z } from "zod";
 
+import { getConfig } from "../src/config.ts";
 import { ErrorResponseSchema, GeoNameSchema } from "../src/schemas.ts";
-import { app } from "../src/server/server.ts";
+import { createServer } from "../src/server/server.ts";
 import { STATUS_CODE } from "../src/server/status.ts";
 
+const HealthSchema = z.object({
+	ready: z.literal(true),
+});
 const DistanceResSchema = z.object({
 	start: GeoNameSchema,
 	end: GeoNameSchema,
 	distance: z.number(),
 });
 
-function getResponse(path: string) {
-	return app.request(new Request(`http://localhost:8000${path}`));
+let server!: Bun.Server<unknown>;
+
+function getResponse(path: string): Promise<Response> {
+	const url = `http://${server.hostname}:${server.port}${path}`;
+	return fetch(url);
 }
 
 function genericCheckResponse({ status, headers }: Response) {
 	expect(status, "Expected OK").toEqual(STATUS_CODE.OK);
-	expect(headers.get("access-control-allow-origin")).toEqual("*");
-	expect(headers.get("server-timing")).not.toBeNull();
+	expect(
+		headers.get("access-control-allow-origin"),
+		"CORS header not found.",
+	).toEqual("*");
+	expect(
+		headers.get("server-timing"),
+		"server-timing header not found",
+	).not.toBeNull();
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: Don't care
@@ -30,6 +43,14 @@ async function checkMatches<T extends z.ZodObject<any, any>>(
 	const data = await res.json();
 	return schema.parse(data);
 }
+
+beforeAll(async () => {
+	const config = await getConfig();
+	server = createServer(config);
+});
+afterAll(async () => {
+	await server.stop();
+});
 
 describe("info route", async () => {
 	test("US", async () => {
@@ -138,7 +159,9 @@ test("random route US with same seed", async () => {
 });
 
 test("random route US with different seed", async () => {
-	const res1 = await getResponse("/api/US/random/?seed=1234");
+	const res1 = await getResponse(
+		`/api/US/random/?seed=${String.fromCharCode(0xd801) + String.fromCharCode(0xdc001)}`,
+	);
 	genericCheckResponse(res1);
 	const code1 = await checkMatches(res1, GeoNameSchema);
 	expect(code1.country_code).toEqual("US");
@@ -169,7 +192,9 @@ test("random route CA with same seed", async () => {
 });
 
 test("random route CA with different seed", async () => {
-	const res1 = await getResponse("/api/CA/random/?seed=1234");
+	const res1 = await getResponse(
+		`/api/CA/random/?seed=${String.fromCharCode(0xd801) + String.fromCharCode(56320)}`,
+	);
 	genericCheckResponse(res1);
 	const code1 = await checkMatches(res1, GeoNameSchema);
 	expect(code1.country_code).toEqual("CA");
@@ -188,9 +213,6 @@ test("random route bad country", async () => {
 });
 
 test("health check route", async () => {
-	const HealthSchema = z.object({
-		ready: z.literal(true),
-	});
 	const res = await getResponse("/health/");
 	genericCheckResponse(res);
 	const d = await checkMatches(res, HealthSchema);
