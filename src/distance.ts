@@ -24,10 +24,10 @@ const sin2 = (arg: number) => Math.sin(arg) ** 2;
  * Calculate distance between two points using the haversine formula.
  */
 export function hDist(point1: Point, point2: Point): number {
-  const [p1, lam1] = [rad(point1[0]), rad(point1[1])];
-  const [p2, lam2] = [rad(point2[0]), rad(point2[1])];
-  const [dPhi, dLam] = [p2 - p1, lam2 - lam1];
-  const a = sin2(dPhi / 2) + Math.cos(p1) * Math.cos(p2) * sin2(dLam / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+	const [p1, lam1] = [rad(point1[0]), rad(point1[1])];
+	const [p2, lam2] = [rad(point2[0]), rad(point2[1])];
+	const [dPhi, dLam] = [p2 - p1, lam2 - lam1];
+	const a = sin2(dPhi / 2) + Math.cos(p1) * Math.cos(p2) * sin2(dLam / 2);
+	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+	return R * c;
 }

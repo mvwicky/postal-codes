@@ -72,7 +72,7 @@ class DataLoader {
 			const params = COUNTRIES.get(cNorm);
 			if (params) {
 				const config = await getConfig();
-				console.log(config);
+				// console.log(config);
 				return new this(cNorm, params, config, options);
 			}
 		}

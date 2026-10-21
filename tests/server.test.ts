@@ -189,7 +189,7 @@ test("random route bad country", async () => {
 
 test("health check route", async () => {
 	const HealthSchema = z.object({
-		ready: z.boolean(),
+		ready: z.literal(true),
 	});
 	const res = await getResponse("/health/");
 	genericCheckResponse(res);
