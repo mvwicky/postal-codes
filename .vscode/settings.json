@@ -12,7 +12,7 @@
     "_data": true
   },
   "[typescript]": {
-    "editor.defaultFormatter": "denoland.vscode-deno"
+    "editor.defaultFormatter": "biomejs.biome"
   },
   "json.schemas": [
     { "fileMatch": ["postal-codes.config.json"], "url": "./config-schema.json" }

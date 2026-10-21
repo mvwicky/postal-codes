@@ -1,10 +1,18 @@
-FROM denoland/deno:2.3.3
+FROM oven/bun:1 as base
+
+WORKDIR /usr/src/app
+COPY package.json bun.lock ./
+RUN ["bun", "install", "--frozen-lockfile"]
+
+COPY . .
+
+RUN ["bun", "build", "--target=bun", "--production", "--outdir=dist", "./server/index.ts"]
+
+FROM oven/bun:1-slim
 EXPOSE 8000
-WORKDIR /app
+WORKDIR /usr/src/app
 
-COPY deno.jsonc deno.lock /app
-RUN ["deno", "install", "--lock"]
+COPY --from=base /usr/src/app/dist ./
+COPY --from=base /usr/src/app/public ./public
 
-COPY main.ts deps.ts /app
-COPY src /app/src
-CMD ["run", "-A", "main.ts"]
+CMD ["bun", "index.js"]

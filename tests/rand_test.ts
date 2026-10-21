@@ -1,35 +1,37 @@
-import { URNG_16, URNG_32, xoroshiro128plus } from "@/src/rand.ts";
-import { assertArrayIncludes, assertLess } from "@/dev_deps.ts";
+import { describe, expect, test } from "bun:test";
 
-Deno.test("URNGs", async (t) => {
-  const URNGS = [URNG_16, URNG_32];
-  for (const urng of URNGS) {
-    await t.step(`${urng.name} valueIn`, () => {
-      const r = new urng();
-      assertLess(r.valueIn(20), 20);
-    });
-    await t.step(`${urng.name} choice`, () => {
-      const r = new urng();
-      const choices = ["a", 20, "c", 30];
-      assertArrayIncludes(choices, [r.choice(choices)]);
-    });
-    await t.step(`${urng.name} normValue`, () => {
-      const r = new urng();
-      assertLess(r.normValue, 1);
-    });
-  }
+import { URNG_16, URNG_32, xoroshiro128plus } from "../src/rand.ts";
+
+describe("URNGs", async () => {
+	const URNGS = [URNG_16, URNG_32];
+
+	for (const urng of URNGS) {
+		test(`${urng.name} valueIn`, () => {
+			const r = new urng();
+			expect(r.valueIn(20)).toBeLessThan(20);
+		});
+		test(`${urng.name} choice`, () => {
+			const r = new urng();
+			const choices = ["a", 20, "c", 30];
+			//@ts-expect-error
+			expect(choices).toInclude([r.choice(choices)]);
+		});
+		test(`${urng.name} normValue`, () => {
+			const r = new urng();
+			expect(r.normValue).toBeLessThan(1);
+		});
+	}
 });
 
-Deno.test("xoroshiro128plus", async (t) => {
-  const seeds = [undefined, 12345, "abcedef"];
-  for (const seed of seeds) {
-    await t.step(`seed: ${typeof seed}`, () => {
-      const g = xoroshiro128plus(seed);
-      g.next();
-      g.return();
-    });
-  }
+describe("xoroshiro128plus", async () => {
+	const seeds = [undefined, 12345, "abcedef"];
+	for (const seed of seeds) {
+		test(`seed: ${typeof seed}`, () => {
+			const g = xoroshiro128plus(seed);
+			g.next();
+			g.return();
+		});
+	}
 });
 
-Deno.test("ALEA", { ignore: true }, () => {
-});
+test.todo("ALEA", () => {});

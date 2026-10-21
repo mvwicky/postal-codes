@@ -1,12 +1,12 @@
 import { getConfig } from "./src/config.ts";
-import { app } from "./src/server.ts";
 import { logger } from "./src/log.ts";
+import { app } from "./src/server/server.ts";
 
 const { server } = await getConfig();
 
-Deno.serve({
-  ...server,
-  onListen: ({ hostname, port }) => {
-    logger().info(`Listening on ${hostname}:${port}`);
-  },
-}, app.fetch);
+const s = Bun.serve({
+	...server,
+	fetch: app.fetch,
+});
+
+logger("server").info(`Listening on ${s.hostname}:${s.port}`);

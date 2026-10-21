@@ -1,4 +1,4 @@
-import { z } from "../deps.ts";
+import { z } from "zod";
 
 export const GeoNameSchema = z.object({
   country_code: z.string(),
