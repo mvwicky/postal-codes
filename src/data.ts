@@ -6,10 +6,11 @@
 
 import { createWriteStream, promises as fs } from "node:fs";
 import * as path from "node:path";
+import { Transform } from "node:stream";
 
+import * as csv from "@fast-csv/parse";
 import type { ConsolaInstance } from "consola";
 
-import { csv } from "../deps.ts";
 import { type Config, getConfig } from "./config.ts";
 import { COUNTRIES, type CountryParams } from "./countries.ts";
 import { logger } from "./log.ts";
@@ -41,7 +42,7 @@ class DataLoader {
 	readonly #options: Required<LoadOptions>;
 	readonly #dataDir: string;
 	readonly #file: string;
-	readonly #zipFile: string;
+	// readonly #zipFile: string;
 
 	constructor(
 		country: string,
@@ -58,7 +59,7 @@ class DataLoader {
 		this.#log = logger().withTag(`${this.name}-data`);
 		this.#options = { fetchTimeout, maxAge };
 		this.#dataDir = path.resolve(process.cwd(), config.dataDir);
-		this.#zipFile = path.join(this.#dataDir, params.zipFileName);
+		// this.#zipFile = path.join(this.#dataDir, params.zipFileName);
 		this.#file = path.join(this.#dataDir, params.outputFileName);
 	}
 
@@ -115,10 +116,8 @@ class DataLoader {
 			const age = now.valueOf() - mtime.valueOf();
 			this.#log.debug(`File age: ${age} (max: ${maxAge})`);
 			return age > maxAge;
-		} catch (_err) {
-			// if (err instanceof Deno.errors.NotFound) {
-			// 	this.#log.info("File not found.");
-			// }
+		} catch (err) {
+			this.#log.error("File not found.", err);
 			return true;
 		}
 	}
@@ -150,8 +149,7 @@ class DataLoader {
 		const openReadStream = zip.makeOpenReadStream(zipFile);
 		return new Promise((resolve, reject) => {
 			let resValue: string | null = null;
-			zipFile.on("entry", async (e) => {
-				const entry = e as zip.yauzl.Entry;
+			zipFile.on("entry", async (entry: zip.yauzl.Entry) => {
 				this.#log.info(`Got entry: ${entry.fileName}`);
 				if (entry.fileName === this.#dataFileName) {
 					this.#log.info(`Entry matches data file name`);
@@ -178,16 +176,14 @@ class DataLoader {
 
 	private async *parse(file: Bun.BunFile): AsyncGenerator<[string, GeoName]> {
 		this.#log.debug("Parsing CSV data.");
+		const parseStream = csv.parse({
+			delimiter: "\t",
+			headers: GEO_COLUMNS as unknown as string[],
+		});
 		const rows = file
 			.stream()
 			.pipeThrough(new TextDecoderStream())
-			.pipeThrough(
-				new csv.CsvParseStream({
-					skipFirstRow: false,
-					separator: "\t",
-					columns: GEO_COLUMNS,
-				}),
-			);
+			.pipeThrough<csv.Row>(Transform.toWeb(parseStream));
 		let [total, failed] = [0, 0];
 		for await (const elem of rows) {
 			total += 1;

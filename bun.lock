@@ -4,6 +4,7 @@
   "workspaces": {
     "": {
       "dependencies": {
+        "@fast-csv/parse": "^5.0.8",
         "c12": "^4.0.0-rc.2",
         "consola": "^3.4.2",
         "hono": "^4.13.13",
@@ -19,6 +20,8 @@
     },
   },
   "packages": {
+    "@fast-csv/parse": ["@fast-csv/parse@5.0.8", "", {}, "sha512-i2R1TWa2tgRn9YEsNplzdCv0z8J1O85nUIqPdAQtQOheZ+Pw/3AhekI27Yp095r7qSJK0l8KwphK8WzB3aCtog=="],
+
     "@types/bun": ["@types/bun@1.4.3", "", { "dependencies": { "bun-types": "1.4.3" } }, "sha512-N67Pqy8JXbAY/j0tNraS3V5mubGvc6rrrNDmDCtZLlFzccbUJPDb0tvgUBC5q4m8ybkP93Jcn1QB+RYQ6PvBhw=="],
 
     "@types/node": ["@types/node@26.6.5", "", { "dependencies": { "undici-types": "~8.9.0" } }, "sha512-uMzsv9stDdofIZBx4UGh4Z9ZgXnGC9seRDscilBcTHAeOFk67MZg/k9bWVfO+bk4qZmG+l52hRnLwUiH2LnJTg=="],

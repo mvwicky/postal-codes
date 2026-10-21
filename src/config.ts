@@ -27,7 +27,7 @@ export async function loadConfig(): Promise<Config> {
 		defaults: DEFAULT_CONFIG,
 		envName: process.env.POSTAL_CODE_ENV,
 	});
-	return config!;
+	return config ?? DEFAULT_CONFIG;
 }
 
 export async function getConfig(): Promise<Config> {
