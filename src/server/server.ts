@@ -19,7 +19,7 @@ const codeErrorString = (codeParam: string) => `Invalid code: ${codeParam}`;
 const errorResponse = (
 	error: string[],
 	code: number = STATUS_CODE.BadRequest,
-) => Response.json({ error }, code);
+) => Response.json({ error }, { status: code });
 
 const infoHandler = async (req: Bun.BunRequest<InfoRoute>) => {
 	const { code, country } = req.params;
