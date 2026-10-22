@@ -9,36 +9,18 @@ export function fromBuffer(
 ): Promise<yauzl.ZipFile> {
 	//@ts-expect-error: This should work
 	const buffer = Buffer.isBuffer(buf) ? buf : Buffer.from(buf);
-	return new Promise((resolve, reject) => {
-		yauzl.fromBuffer(buffer, options, (err, resp) => {
-			if (err) {
-				reject(err);
-			} else {
-				resolve(resp);
-			}
-		});
-	});
+	return yauzl.fromBufferPromise(buffer, options);
 }
 
 export function makeOpenReadStream(
 	zipFile: yauzl.ZipFile,
 ): (entry: yauzl.Entry, options?: yauzl.ZipFileOptions) => Promise<Readable> {
 	return (entry: yauzl.Entry, options?: yauzl.ZipFileOptions) => {
-		const opts: yauzl.ZipFileOptions = {
+		return zipFile.openReadStreamPromise(entry, {
 			start: null,
 			decrypt: null,
 			end: null,
-			decompress: entry.isCompressed() ? true : null,
 			...options,
-		};
-		return new Promise((resolve, reject) => {
-			zipFile.openReadStream(entry, opts, (err, stream) => {
-				if (err) {
-					reject(err);
-				} else {
-					resolve(stream);
-				}
-			});
 		});
 	};
 }
