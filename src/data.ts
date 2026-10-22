@@ -116,8 +116,7 @@ class DataLoader {
 			const age = now.valueOf() - mtime.valueOf();
 			this.#log.debug(`File age: ${age} (max: ${maxAge})`);
 			return age > maxAge;
-		} catch (err) {
-			this.#log.error("File not found.", err);
+		} catch (_err) {
 			return true;
 		}
 	}

@@ -4,7 +4,14 @@ import { hDist } from "../distance";
 import { logger } from "../log";
 import { Alea, DEFAULT_URNG16 } from "../rand";
 import { normKey, toPoint } from "../utils";
-import { apply, cors, type Handler, logging, timing } from "./middleware";
+import {
+	apply,
+	cors,
+	type Handler,
+	logging,
+	memoryUsage,
+	timing,
+} from "./middleware";
 import { STATUS_CODE } from "./status";
 
 type CountryRoute = `${string}/:country/${string}`;
@@ -84,7 +91,7 @@ const randomHandler = async (req: Bun.BunRequest<CountryRoute>) => {
 };
 
 const defaultMW = <T extends string>(handler: Handler<T>) =>
-	apply<T>(logging(), cors(), timing())(handler);
+	apply<T>(logging(), cors(), memoryUsage(), timing())(handler);
 
 export const createServer = (config: Config) =>
 	Bun.serve({

@@ -1,4 +1,5 @@
 import { logger } from "../log";
+import { logMemory } from "../utils";
 
 export type Handler<T extends string = string> = (
 	req: Bun.BunRequest<T>,
@@ -40,6 +41,20 @@ export function logging<T extends string = string>(): Middleware<T> {
 		return async (req: Bun.BunRequest<T>) => {
 			logger().info(`${req.method} ${req.url}`);
 			return next(req);
+		};
+	};
+}
+
+export function memoryUsage<T extends string = string>(): Middleware<T> {
+	return function memMW<T extends string = string>(
+		next: Handler<T>,
+	): Handler<T> {
+		return async (req: Bun.BunRequest<T>) => {
+			const start = process.memoryUsage();
+			const res = await next(req);
+			const end = process.memoryUsage();
+			queueMicrotask(() => logMemory(start, end));
+			return res;
 		};
 	};
 }
