@@ -51,8 +51,6 @@ const useTempDir = () => {
 };
 
 describe("load", async () => {
-	useTempDir();
-
 	test("US data", async () => {
 		const data = await loadCountryData("US", {
 			forceReload: true,

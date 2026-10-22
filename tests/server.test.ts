@@ -68,24 +68,24 @@ describe("info route", async () => {
 		expect(geoData.admin_code_1).toEqual("BC");
 		expect(geoData.place_name).toEqual("Vernon Central");
 	});
-});
 
-test("info route bad country", async () => {
-	const res = await getResponse("/api/AB/info/93109/");
-	expect(res.status).toEqual(STATUS_CODE.BadRequest);
-	const resData = await checkMatches(res, ErrorResponseSchema);
-	expect(resData.error.length).toEqual(1);
-});
-
-describe("info route bad code", async () => {
-	test("US", async () => {
-		const res = await getResponse("/api/US/info/ABCDEF/");
-		expect(res.status).toEqual(STATUS_CODE.BadRequest);
-		const resData = await checkMatches(res, ErrorResponseSchema);
-		expect(resData.error.length).toEqual(1);
+	describe("bad code", async () => {
+		test("US", async () => {
+			const res = await getResponse("/api/US/info/ABCDEF/");
+			expect(res.status).toEqual(STATUS_CODE.BadRequest);
+			const resData = await checkMatches(res, ErrorResponseSchema);
+			expect(resData.error.length).toEqual(1);
+		});
+		test("CA", async () => {
+			const res = await getResponse("/api/CA/info/ABCDEF/");
+			expect(res.status).toEqual(STATUS_CODE.BadRequest);
+			const resData = await checkMatches(res, ErrorResponseSchema);
+			expect(resData.error.length).toEqual(1);
+		});
 	});
-	test("CA", async () => {
-		const res = await getResponse("/api/CA/info/ABCDEF/");
+
+	test("bad country", async () => {
+		const res = await getResponse("/api/AB/info/93109/");
 		expect(res.status).toEqual(STATUS_CODE.BadRequest);
 		const resData = await checkMatches(res, ErrorResponseSchema);
 		expect(resData.error.length).toEqual(1);
@@ -103,113 +103,113 @@ describe("distance route", async () => {
 		genericCheckResponse(res);
 		await checkMatches(res, DistanceResSchema);
 	});
-});
 
-test("distance route bad country", async () => {
-	const res = await getResponse("/api/AB/distance/93109/02119/");
-	expect(res.status).toEqual(STATUS_CODE.BadRequest);
-	const resData = await checkMatches(res, ErrorResponseSchema);
-	expect(resData.error.length).toEqual(1);
-});
+	describe("bad codes", async () => {
+		test("US one bad code", async () => {
+			const res = await getResponse("/api/US/distance/ABCDEF/93109/");
+			expect(res.status).toEqual(STATUS_CODE.BadRequest);
+			const resData = await checkMatches(res, ErrorResponseSchema);
+			expect(resData.error.length).toEqual(1);
+		});
+		test("US two bad codes", async () => {
+			const res = await getResponse("/api/US/distance/ABCDEF/GHIJKL/");
+			expect(res.status).toEqual(STATUS_CODE.BadRequest);
+			const resData = await checkMatches(res, ErrorResponseSchema);
+			expect(resData.error.length).toEqual(2);
+		});
+		test("CA one bad code", async () => {
+			const res = await getResponse("/api/CA/distance/ABCDEF/T0A/");
+			expect(res.status).toEqual(STATUS_CODE.BadRequest);
+			const resData = await checkMatches(res, ErrorResponseSchema);
+			expect(resData.error.length).toEqual(1);
+		});
+		test("CA two bad codes", async () => {
+			const res = await getResponse("/api/CA/distance/ABCDEF/GHIJKL/");
+			expect(res.status).toEqual(STATUS_CODE.BadRequest);
+			const resData = await checkMatches(res, ErrorResponseSchema);
+			expect(resData.error.length).toEqual(2);
+		});
+	});
 
-describe("distance route bad codes", async () => {
-	test("US one bad code", async () => {
-		const res = await getResponse("/api/US/distance/ABCDEF/93109/");
+	test("bad country", async () => {
+		const res = await getResponse("/api/AB/distance/93109/02119/");
 		expect(res.status).toEqual(STATUS_CODE.BadRequest);
 		const resData = await checkMatches(res, ErrorResponseSchema);
 		expect(resData.error.length).toEqual(1);
 	});
-	test("US two bad codes", async () => {
-		const res = await getResponse("/api/US/distance/ABCDEF/GHIJKL/");
-		expect(res.status).toEqual(STATUS_CODE.BadRequest);
-		const resData = await checkMatches(res, ErrorResponseSchema);
-		expect(resData.error.length).toEqual(2);
+});
+
+describe("random route", async () => {
+	test("US no seed", async () => {
+		const res1 = await getResponse("/api/US/random/");
+		genericCheckResponse(res1);
+		const code1 = await checkMatches(res1, GeoNameSchema);
+		expect(code1.country_code).toEqual("US");
 	});
-	test("CA one bad code", async () => {
-		const res = await getResponse("/api/CA/distance/ABCDEF/T0A/");
+
+	test("US with same seed", async () => {
+		const res1 = await getResponse("/api/US/random/?seed=1234");
+		genericCheckResponse(res1);
+		const code1 = await checkMatches(res1, GeoNameSchema);
+		expect(code1.country_code).toEqual("US");
+		const res2 = await getResponse("/api/US/random/?seed=1234");
+		genericCheckResponse(res2);
+		const code2 = await checkMatches(res2, GeoNameSchema);
+		expect(code2.country_code).toEqual("US");
+		expect(code1.postal_code).toEqual(code2.postal_code);
+	});
+
+	test("US with different seed", async () => {
+		const seed = String.fromCharCode(0xd801) + String.fromCharCode(0xdc001);
+		const res1 = await getResponse(`/api/US/random/?seed=${seed}`);
+		genericCheckResponse(res1);
+		const code1 = await checkMatches(res1, GeoNameSchema);
+		expect(code1.country_code).toEqual("US");
+		const res2 = await getResponse("/api/US/random/?seed=ABCD");
+		genericCheckResponse(res2);
+		const code2 = await checkMatches(res2, GeoNameSchema);
+		expect(code2.country_code).toEqual("US");
+		expect(code1.postal_code).not.toEqual(code2.postal_code);
+	});
+
+	test("CA no seed", async () => {
+		const res1 = await getResponse("/api/CA/random/");
+		genericCheckResponse(res1);
+		const code1 = await checkMatches(res1, GeoNameSchema);
+		expect(code1.country_code).toEqual("CA");
+	});
+
+	test("CA with same seed", async () => {
+		const res1 = await getResponse("/api/CA/random/?seed=1234");
+		genericCheckResponse(res1);
+		const code1 = await checkMatches(res1, GeoNameSchema);
+		expect(code1.country_code).toEqual("CA");
+		const res2 = await getResponse("/api/CA/random/?seed=1234");
+		genericCheckResponse(res2);
+		const code2 = await checkMatches(res2, GeoNameSchema);
+		expect(code2.country_code).toEqual("CA");
+		expect(code1.postal_code).toEqual(code2.postal_code);
+	});
+
+	test("CA with different seed", async () => {
+		const seed = String.fromCharCode(0xd801) + String.fromCharCode(0xdc00);
+		const res1 = await getResponse(`/api/CA/random/?seed=${seed}`);
+		genericCheckResponse(res1);
+		const code1 = await checkMatches(res1, GeoNameSchema);
+		expect(code1.country_code).toEqual("CA");
+		const res2 = await getResponse("/api/CA/random/?seed=ABCD");
+		genericCheckResponse(res2);
+		const code2 = await checkMatches(res2, GeoNameSchema);
+		expect(code2.country_code).toEqual("CA");
+		expect(code1.postal_code).not.toEqual(code2.postal_code);
+	});
+
+	test("bad country", async () => {
+		const res = await getResponse("/api/AB/random/");
 		expect(res.status).toEqual(STATUS_CODE.BadRequest);
 		const resData = await checkMatches(res, ErrorResponseSchema);
 		expect(resData.error.length).toEqual(1);
 	});
-	test("CA two bad codes", async () => {
-		const res = await getResponse("/api/CA/distance/ABCDEF/GHIJKL/");
-		expect(res.status).toEqual(STATUS_CODE.BadRequest);
-		const resData = await checkMatches(res, ErrorResponseSchema);
-		expect(resData.error.length).toEqual(2);
-	});
-});
-
-test("random route US no seed", async () => {
-	const res1 = await getResponse("/api/US/random/");
-	genericCheckResponse(res1);
-	const code1 = await checkMatches(res1, GeoNameSchema);
-	expect(code1.country_code).toEqual("US");
-});
-
-test("random route US with same seed", async () => {
-	const res1 = await getResponse("/api/US/random/?seed=1234");
-	genericCheckResponse(res1);
-	const code1 = await checkMatches(res1, GeoNameSchema);
-	expect(code1.country_code).toEqual("US");
-	const res2 = await getResponse("/api/US/random/?seed=1234");
-	genericCheckResponse(res2);
-	const code2 = await checkMatches(res2, GeoNameSchema);
-	expect(code2.country_code).toEqual("US");
-	expect(code1.postal_code).toEqual(code2.postal_code);
-});
-
-test("random route US with different seed", async () => {
-	const res1 = await getResponse(
-		`/api/US/random/?seed=${String.fromCharCode(0xd801) + String.fromCharCode(0xdc001)}`,
-	);
-	genericCheckResponse(res1);
-	const code1 = await checkMatches(res1, GeoNameSchema);
-	expect(code1.country_code).toEqual("US");
-	const res2 = await getResponse("/api/US/random/?seed=ABCD");
-	genericCheckResponse(res2);
-	const code2 = await checkMatches(res2, GeoNameSchema);
-	expect(code2.country_code).toEqual("US");
-	expect(code1.postal_code).not.toEqual(code2.postal_code);
-});
-
-test("random route CA no seed", async () => {
-	const res1 = await getResponse("/api/CA/random/");
-	genericCheckResponse(res1);
-	const code1 = await checkMatches(res1, GeoNameSchema);
-	expect(code1.country_code).toEqual("CA");
-});
-
-test("random route CA with same seed", async () => {
-	const res1 = await getResponse("/api/CA/random/?seed=1234");
-	genericCheckResponse(res1);
-	const code1 = await checkMatches(res1, GeoNameSchema);
-	expect(code1.country_code).toEqual("CA");
-	const res2 = await getResponse("/api/CA/random/?seed=1234");
-	genericCheckResponse(res2);
-	const code2 = await checkMatches(res2, GeoNameSchema);
-	expect(code2.country_code).toEqual("CA");
-	expect(code1.postal_code).toEqual(code2.postal_code);
-});
-
-test("random route CA with different seed", async () => {
-	const res1 = await getResponse(
-		`/api/CA/random/?seed=${String.fromCharCode(0xd801) + String.fromCharCode(56320)}`,
-	);
-	genericCheckResponse(res1);
-	const code1 = await checkMatches(res1, GeoNameSchema);
-	expect(code1.country_code).toEqual("CA");
-	const res2 = await getResponse("/api/CA/random/?seed=ABCD");
-	genericCheckResponse(res2);
-	const code2 = await checkMatches(res2, GeoNameSchema);
-	expect(code2.country_code).toEqual("CA");
-	expect(code1.postal_code).not.toEqual(code2.postal_code);
-});
-
-test("random route bad country", async () => {
-	const res = await getResponse("/api/AB/random/");
-	expect(res.status).toEqual(STATUS_CODE.BadRequest);
-	const resData = await checkMatches(res, ErrorResponseSchema);
-	expect(resData.error.length).toEqual(1);
 });
 
 test("health check route", async () => {
