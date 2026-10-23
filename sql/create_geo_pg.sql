@@ -22,4 +22,3 @@ CREATE TABLE postal_codes.geo (
 CREATE INDEX geo_postal_code ON postal_codes.geo (postal_code);
 
 CREATE INDEX geo_cc_postal_code ON postal_codes.geo (country_code, postal_code);
-

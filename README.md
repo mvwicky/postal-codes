@@ -23,7 +23,6 @@ Where I figure out postal code parsing.
 #### Format
 
 TSV files with the following fields:
-
 - country code
 - postal code
 - place name

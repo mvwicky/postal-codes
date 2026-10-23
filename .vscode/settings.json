@@ -1,21 +1,21 @@
 {
-  "files.exclude": {
-    "**/.git": true,
-    "**/.svn": true,
-    "**/.hg": true,
-    "**/CVS": true,
-    "**/.DS_Store": true,
-    "**/*.db": true,
-    "**/data": true,
-    "**/_data": true,
-    "**/dist": true,
-    "**/node_modules": true,
-    "**/tmp": true
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "json.schemas": [
-    { "fileMatch": ["postal-codes.config.json"], "url": "./config-schema.json" }
-  ]
+	"files.exclude": {
+		"**/.git": true,
+		"**/.svn": true,
+		"**/.hg": true,
+		"**/CVS": true,
+		"**/.DS_Store": true,
+		"**/*.db": true,
+		"**/data": true,
+		"**/_data": true,
+		"**/dist": true,
+		"**/node_modules": true,
+		"**/tmp": true
+	},
+	"[typescript][json][jsonc][markdown]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"json.schemas": [
+		{ "fileMatch": ["postal-codes.config.json"], "url": "./config-schema.json" }
+	]
 }

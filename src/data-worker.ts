@@ -20,10 +20,10 @@ async function fetchCountryData(url: URL): Promise<Buffer | null> {
 	return null;
 }
 
-async function extractCountryData(buf: Buffer, dataFileName: string) {
+async function extractCountryData(buf: Buffer, _dataFileName: string) {
 	// const log = logger();
 	const zipFile = await zip.fromBuffer(buf, { lazyEntries: true });
-	const openReadStream = zip.makeOpenReadStream(zipFile);
+	const _openReadStream = zip.makeOpenReadStream(zipFile);
 	zipFile.on("entry", (e) => {
 		const entry = e as zip.yauzl.Entry;
 		console.info(`Got entry: ${entry.fileName}`);

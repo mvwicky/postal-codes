@@ -1,7 +1,7 @@
 {
-  "dataDir": "data",
-  "downloadMaxAge": 864000000,
-  "$test": {
-    "dataDir": "_data"
-  }
+	"dataDir": "data",
+	"downloadMaxAge": 864000000,
+	"$test": {
+		"dataDir": "_data"
+	}
 }
