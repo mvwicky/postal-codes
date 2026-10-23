@@ -1,6 +1,4 @@
 {
-  "deno.enable": true,
-  "deno.lint": true,
   "files.exclude": {
     "**/.git": true,
     "**/.svn": true,
@@ -8,11 +6,14 @@
     "**/CVS": true,
     "**/.DS_Store": true,
     "**/*.db": true,
-    "data": true,
-    "_data": true
+    "**/data": true,
+    "**/_data": true,
+    "**/dist": true,
+    "**/node_modules": true,
+    "**/tmp": true
   },
   "[typescript]": {
-    "editor.defaultFormatter": "denoland.vscode-deno"
+    "editor.defaultFormatter": "biomejs.biome"
   },
   "json.schemas": [
     { "fileMatch": ["postal-codes.config.json"], "url": "./config-schema.json" }

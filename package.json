@@ -1,0 +1,21 @@
+{
+  "name": "postal-codes",
+  "private": true,
+  "scripts": {
+    "typecheck": "bun check"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/yauzl": "^3.4.0"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
+  },
+  "dependencies": {
+    "@fast-csv/parse": "^5.0.8",
+    "c12": "^4.0.0-rc.2",
+    "consola": "^3.4.2",
+    "yauzl": "^3.4.0",
+    "zod": "^4.6.7"
+  }
+}

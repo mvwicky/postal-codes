@@ -1,16 +1,13 @@
 set shell := ["bash", "-uc"]
 
-deps_files := "deps.ts dev_deps.ts"
-entry_files := "main.ts cli.ts tests/data_test.ts tests/server_test.ts"
-deno := "deno"
+bun := "bun"
 podman := "podman"
 img_name := "postal-codes"
 dockerfile := "Dockerfile"
 img_path := "localhost/" + img_name + ":latest"
 volume_name := "postal-codes-data"
 default_port := "8000"
-cov_dir := "./.cov"
-lock_file := "./deno.lock"
+lock_file := "./bun.lock"
 
 _default:
 	@just --list --justfile {{ justfile() }}
@@ -53,38 +50,43 @@ stop-container:
 rm-container:
 	{{ podman }} rm {{ img_name }}
 
-[group("deno")]
-[doc("Cache deno dependencies")]
-cache-deps:
-	{{ deno }} install --lock={{ lock_file }}
+[group("bun")]
+[doc("Run dev server")]
+dev:
+	{{ bun }} run --hot main.ts
 
-[group("deno")]
-[doc("Cache deno dependencies from scratch")]
+[group("bun")]
+[doc("Build for production")]
+build:
+	{{ bun }} build --target=bun --production --outdir=dist ./main.ts
+
+[group("bun")]
+[doc("Cache bun dependencies")]
+cache-deps:
+	{{ bun }} install
+
+[group("bun")]
+[doc("Cache bun dependencies from scratch")]
 reload-deps:
 	trash {{ lock_file }}
-	{{ deno }} cache --lock={{ lock_file }} --reload {{ deps_files }}
+	{{ bun }} install --force
 
-[group("deno")]
+[group("bun")]
 [doc("Run typechecking")]
 check:
-	{{ deno }} check {{ entry_files }}
+	{{ bun }} check
 
-[group("deno")]
+[group("bun")]
 [doc("Lint files")]
 lint:
-	{{ deno }} lint .
+	{{ bun }} lint .
 
-[group("deno")]
+[group("bun")]
 [doc("Run automated tests")]
 test:
-	{{ deno }} test --fail-fast=1 --coverage={{ cov_dir }} -A
+	{{ bun }} test --bail=1
 
-[group("deno")]
+[group("bun")]
 [doc("Run automated tests (with filtering)")]
 testf filter:
-	{{ deno }} test --fail-fast=1 --coverage={{ cov_dir }} --filter="{{ filter }}" -A
-
-[group("deno")]
-[doc("Open generated coverage file")]
-open-coverage:
-	open {{ cov_dir }}/html/index.html
+	{{ bun }} test --bail=1 --test-name-patttern="{{ filter }}"
