@@ -9,3 +9,10 @@ logs/
 Makefile
 sql/
 tests/
+.env
+.envrc
+data/
+_data/
+dist/
+node_modules/
+tmep/
