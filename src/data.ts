@@ -7,6 +7,7 @@
 import { createWriteStream, promises as fs } from "node:fs";
 import * as path from "node:path";
 import { Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
 
 import * as csv from "@fast-csv/parse";
 import type { ConsolaInstance } from "consola";
@@ -144,33 +145,18 @@ class DataLoader {
 
 	private async extract(buf: ArrayBuffer): Promise<string | null> {
 		this.#log.info(`Extracting zipped data.`);
-		const zipFile = await zip.fromBuffer(buf, { lazyEntries: true });
-		const openReadStream = zip.makeOpenReadStream(zipFile);
-		return new Promise((resolve, reject) => {
-			let resValue: string | null = null;
-			zipFile.on("entry", async (entry: zip.yauzl.Entry) => {
-				this.#log.info(`Got entry: ${entry.fileName}`);
-				if (entry.fileName === this.#dataFileName) {
-					this.#log.info(`Entry matches data file name`);
-					const stream = await openReadStream(entry);
-					const outFile = createWriteStream(this.#file);
-					stream.on("end", () => {
-						this.#log.info(`Stream ended`);
-						resValue = this.#file;
-						zipFile.readEntry();
-					});
-					stream.pipe(outFile);
-				} else {
-					zipFile.readEntry();
-				}
-			});
-			zipFile.on("end", () => {
-				this.#log.info("ZIP File Ended");
-				resolve(resValue);
-			});
-			zipFile.on("error", (event) => reject(event));
-			zipFile.readEntry();
-		});
+		const zipFile = await zip.fromBuffer(Buffer.from(buf));
+		let resValue: string | null = null;
+		for await (const entry of zipFile.eachEntry()) {
+			if (entry.fileName === this.#dataFileName) {
+				const stream = await zipFile.openReadStreamPromise(entry);
+				const outFile = createWriteStream(this.#file);
+				await pipeline(stream, outFile);
+				resValue = this.#file;
+			}
+		}
+		zipFile.close();
+		return resValue;
 	}
 
 	private async *parse(file: Bun.BunFile): AsyncGenerator<[string, GeoName]> {

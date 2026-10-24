@@ -3,6 +3,8 @@
 import { Buffer } from "node:buffer";
 import * as path from "node:path";
 
+import type { Entry as ZipEntry } from "yauzl";
+
 import { getConfig } from "./config.ts";
 import { COUNTRIES, type CountryParams } from "./countries.ts";
 import { logger } from "./log.ts";
@@ -23,9 +25,8 @@ async function fetchCountryData(url: URL): Promise<Buffer | null> {
 async function extractCountryData(buf: Buffer, _dataFileName: string) {
 	// const log = logger();
 	const zipFile = await zip.fromBuffer(buf, { lazyEntries: true });
-	const _openReadStream = zip.makeOpenReadStream(zipFile);
 	zipFile.on("entry", (e) => {
-		const entry = e as zip.yauzl.Entry;
+		const entry = e as ZipEntry;
 		console.info(`Got entry: ${entry.fileName}`);
 	});
 	zipFile.readEntry();
