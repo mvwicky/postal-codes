@@ -91,8 +91,6 @@ class DataLoader {
 				if (!res) {
 					return null;
 				}
-				const now = new Date();
-				await fs.utimes(this.#file, now, now);
 			} else {
 				return null;
 			}
@@ -149,13 +147,17 @@ class DataLoader {
 		let resValue: string | null = null;
 		for await (const entry of zipFile.eachEntry()) {
 			if (entry.fileName === this.#dataFileName) {
-				const stream = await zipFile.openReadStreamPromise(entry);
+				const outStream = await zipFile.openReadStreamPromise(entry);
 				const outFile = createWriteStream(this.#file);
-				await pipeline(stream, outFile);
+				await pipeline(outStream, outFile);
 				resValue = this.#file;
 			}
 		}
 		zipFile.close();
+		if (resValue) {
+			const now = new Date();
+			await fs.utimes(resValue, now, now);
+		}
 		return resValue;
 	}
 
@@ -180,7 +182,9 @@ class DataLoader {
 				failed += 1;
 			}
 		}
-		this.#log.info(`${failed} failures out of ${total} total rows`);
+		if (failed) {
+			this.#log.info(`${failed} failures out of ${total} total rows`);
+		}
 	}
 }
 

@@ -12,12 +12,15 @@ hooks = [
 
 [[repos]]
 repo = "local"
+
 [[repos.hooks]]
 id = "biome-check"
 name = "biome check"
 entry = "bunx @biomejs/biome check --files-ignore-unknown=true --no-errors-on-unmatched"
 language = "system"
 types = ["text"]
+files = "\\.(jsx?|tsx?|c(js|ts)|m(js|ts)|d\\.(ts|cts|mts)|jsonc?|css)$"
+
 [[repos.hooks]]
 id = "bun-check"
 name = "bun check"
