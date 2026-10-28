@@ -1,6 +1,11 @@
 name: Fly Deploy
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "cli.ts"
 jobs:
   deploy:
     name: Deploy app
