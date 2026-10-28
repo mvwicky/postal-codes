@@ -1,4 +1,4 @@
-import { type ConsolaInstance, createConsola } from "consola/core";
+import { type ConsolaInstance, createConsola } from "consola";
 
 let _log: ConsolaInstance | undefined;
 
