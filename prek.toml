@@ -19,7 +19,7 @@ name = "biome check"
 entry = "bunx @biomejs/biome check --files-ignore-unknown=true --no-errors-on-unmatched"
 language = "system"
 types = ["text"]
-files = "\\.(jsx?|tsx?|c(js|ts)|m(js|ts)|d\\.(ts|cts|mts)|jsonc?|css)$"
+files = "\\.(jsx?|tsx?|c(js|ts)|m(js|ts)|d\\.(ts|cts|mts)|jsonc?|css|svelte|vue|astro|graphql|gql|md|yml|yaml)$"
 
 [[repos.hooks]]
 id = "bun-check"
