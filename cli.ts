@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 import type { ConsolaInstance } from "consola";
 
 import { loadCountryData } from "./src/data.ts";
@@ -5,13 +6,15 @@ import { hDist } from "./src/distance.ts";
 import { logger } from "./src/log.ts";
 import { toPoint } from "./src/utils.ts";
 
+type Command = (args: string[], log: ConsolaInstance) => Promise<number>;
+
 function dFormat(d: number): string {
 	const f = new Intl.DurationFormat(undefined);
-	return f.format({ milliseconds: d });
+	return f.format({ milliseconds: Math.trunc(d) });
 }
 
 async function distance(args: string[], log: ConsolaInstance) {
-	const country = args.length === 3 ? (args.shift() ?? "US") : "Us";
+	const country = args.length === 3 ? (args.shift() ?? "US") : "US";
 	const [code1, code2] = args;
 	if (!(code1 && code2)) {
 		log.warn("Two ZIP codes required.");
@@ -44,15 +47,21 @@ async function distance(args: string[], log: ConsolaInstance) {
 	return 0;
 }
 
-const COMMANDS = new Map<
-	string,
-	(args: string[], log: ConsolaInstance) => Promise<number>
->([["distance", distance]]);
+async function info(_args: string[], _log: ConsolaInstance) {
+	return 0;
+}
 
-if (import.meta.main) {
-	const start = performance.now();
+async function load(_args: string[], _log: ConsolaInstance) {
+	return 0;
+}
+
+const COMMANDS = new Map<string, Command>(
+	[distance, info, load].map((f) => [f.name, f]),
+);
+
+if (import.meta.path === Bun.main) {
 	const log = logger();
-	const [cmd, ...rest] = process.argv;
+	const [cmd, ...rest] = process.argv.slice(2);
 	if (!cmd) {
 		log.warn(`No command given.`);
 		process.exit(1);
@@ -63,6 +72,7 @@ if (import.meta.main) {
 		log.warn(`Command must be one of: ${[...COMMANDS.keys()].join(", ")}.`);
 		process.exit(1);
 	}
+	const start = performance.now();
 	const code = await cmdFunction(rest, log.withTag(cmd));
 	const elapsed = dFormat(performance.now() - start);
 	log.info(`Elapsed: ${elapsed || "0s"}`);
