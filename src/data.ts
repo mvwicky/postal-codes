@@ -15,6 +15,7 @@ import type { ConsolaInstance } from "consola";
 import { type Config, getConfig } from "./config.ts";
 import { COUNTRIES, type CountryParams } from "./countries.ts";
 import { logger } from "./log.ts";
+import { isSuccess, newError, newSuccess, type Result } from "./result.ts";
 import { GEO_COLUMNS, type GeoName, GeoNameSchema } from "./schemas.ts";
 import { normKey } from "./utils.ts";
 import * as zip from "./zipfiles.ts";
@@ -29,10 +30,18 @@ type LoadOptions = {
 
 const defaultCache: CacheType = new Map();
 
-async function checkCountry(country: string): Promise<string | null> {
+async function checkCountry(
+	country: string,
+): Promise<Result<[string, Readonly<CountryParams>]>> {
 	const { allowedCountries } = await getConfig();
 	const cNorm = normKey(country);
-	return allowedCountries.includes(cNorm) ? cNorm : null;
+	if (allowedCountries.includes(cNorm)) {
+		const params = COUNTRIES.get(cNorm);
+		if (params) {
+			return newSuccess([cNorm, params]);
+		}
+	}
+	return newError(`Unknown country "${country}"`);
 }
 
 class DataLoader {
@@ -67,17 +76,13 @@ class DataLoader {
 	static async create(
 		country: string,
 		options: Partial<LoadOptions> = {},
-	): Promise<DataLoader | null> {
-		const cNorm = await checkCountry(country);
-		if (cNorm) {
-			const params = COUNTRIES.get(cNorm);
-			if (params) {
-				const config = await getConfig();
-				// console.log(config);
-				return new this(cNorm, params, config, options);
-			}
+	): Promise<Result<DataLoader>> {
+		const res = await checkCountry(country);
+		if (isSuccess(res)) {
+			const config = await getConfig();
+			return newSuccess(new this(...res.result, config, options));
 		}
-		return null;
+		return newError(res.err);
 	}
 
 	async load(): Promise<CountryData | null> {
@@ -188,34 +193,61 @@ class DataLoader {
 	}
 }
 
-async function loadCountryData(
+export async function loadCountryData(
 	country: string,
 	{
 		cache = defaultCache,
 		forceReload = false,
 		...options
 	}: Partial<LoadOptions & { cache: CacheType; forceReload: boolean }> = {},
-): Promise<CountryData | null> {
-	const loader = await DataLoader.create(country, options);
-	if (loader) {
+): Promise<Result<CountryData>> {
+	const res = await DataLoader.create(country, options);
+	if (isSuccess(res)) {
+		const loader = res.result;
 		const log = logger().withTag(`${loader.name}-data`);
 		if (forceReload) {
-			log.info("Cache cleared.");
 			cache.delete(loader.name);
+			log.info("Cache cleared.");
 		} else {
 			const cachedData = cache.get(loader.name);
 			if (cachedData) {
 				log.info("Data was cached.");
-				return cachedData;
+				return newSuccess(cachedData);
 			}
 		}
 		const data = await loader.load();
 		if (data?.size) {
 			cache.set(loader.name, data);
-			return data;
+			return newSuccess(data);
 		}
+		return newError("Unable to load data");
+	} else {
+		return res;
 	}
-	return null;
 }
 
-export { DataLoader, loadCountryData };
+export async function getPostalCodeInfo(
+	country: string,
+	code: string,
+	{
+		cache = defaultCache,
+		forceReload = false,
+		...options
+	}: Partial<LoadOptions & { cache: CacheType; forceReload: boolean }> = {},
+): Promise<Result<GeoName>> {
+	const res = await loadCountryData(country, {
+		cache,
+		forceReload,
+		...options,
+	});
+	if (isSuccess(res)) {
+		const countryData = res.result;
+		const codeInfo = countryData.get(normKey(code));
+		if (codeInfo) {
+			return newSuccess(codeInfo);
+		} else {
+			return newError(`Postal code info not found for ${country}, ${code}`);
+		}
+	}
+	return res;
+}

@@ -17,5 +17,14 @@
 	},
 	"json.schemas": [
 		{ "fileMatch": ["postal-codes.config.json"], "url": "./config-schema.json" }
+	],
+	"coverage-gutters.coverageBaseDir": ".cov",
+	"coverage-gutters.coverageFileNames": [
+		"lcov.info",
+		"cov.xml",
+		"coverage.xml",
+		"cobertura.xml",
+		"jacoco.xml",
+		"coverage.cobertura.xml"
 	]
 }

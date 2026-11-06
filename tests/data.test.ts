@@ -1,9 +1,10 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
 import * as fs from "node:fs/promises";
 import { rm } from "node:fs/promises";
 
 import { type Config, getConfig } from "../src/config.ts";
-import { loadCountryData } from "../src/data.ts";
+import { getPostalCodeInfo, loadCountryData } from "../src/data.ts";
+import { expectIsFailure, expectIsSuccess } from "./utils.ts";
 
 async function safeRm(dir: string) {
 	try {
@@ -51,42 +52,59 @@ const useTempDir = () => {
 };
 
 describe("load", async () => {
-	test("US data", async () => {
-		const data = await loadCountryData("US", {
+	test.each(["US", "CA"])("%s", async (country) => {
+		const data = await loadCountryData(country, {
 			forceReload: true,
 			fetchTimeout: Infinity,
 		});
-		expect(data).toBeInstanceOf(Map);
-		expect(data?.size).not.toEqual(0);
+		expectIsSuccess(data);
+		expect(data.result.size).not.toEqual(0);
 	});
-	test("CA data", async () => {
-		const data = await loadCountryData("CA", {
-			forceReload: true,
-			fetchTimeout: Infinity,
+});
+
+describe("get info", async () => {
+	test.each([
+		["US", "02119"],
+		["CA", "S7V"],
+	])("%s", async (country, code) => {
+		const info = await getPostalCodeInfo(country, code);
+		expectIsSuccess(info);
+	});
+
+	test("fail bad country", async () => {
+		const info = await getPostalCodeInfo("AB", "93103");
+		expect(info.status).toBe("error");
+	});
+
+	test("fail bad code", async () => {
+		const info = await getPostalCodeInfo("US", "9310A");
+		expect(info.status).toBe("error");
+	});
+
+	test.todo("load throws", async () => {
+		mock.module("../src/data.ts", () => {
+			return {
+				loadCountryData: async () => {
+					return 1;
+				},
+			};
 		});
-		expect(data).toBeInstanceOf(Map);
-		expect(data?.size).not.toEqual(0);
+
+		const info = await getPostalCodeInfo("US", "9310A");
+		expect(info.status).toBe("error");
 	});
 });
 
 describe("download data", async () => {
 	useTempDir();
 
-	test("US data", async () => {
-		const data = await loadCountryData("US", {
+	test.each(["US", "CA"])("%s", async (country) => {
+		const data = await loadCountryData(country, {
 			forceReload: true,
 			fetchTimeout: Infinity,
 		});
-		expect(data).toBeInstanceOf(Map);
-		expect(data?.size ?? 0).not.toEqual(0);
-	});
-	test("CA data", async () => {
-		const data = await loadCountryData("CA", {
-			forceReload: true,
-			fetchTimeout: Infinity,
-		});
-		expect(data).toBeInstanceOf(Map);
-		expect(data?.size ?? 0).not.toEqual(0);
+		expectIsSuccess(data);
+		expect(data.result.size ?? 0).not.toEqual(0);
 	});
 });
 
@@ -97,5 +115,5 @@ test("fetch timeout", async () => {
 		forceReload: true,
 		fetchTimeout: 1,
 	});
-	expect(data).toBeNull();
+	expectIsFailure(data);
 });

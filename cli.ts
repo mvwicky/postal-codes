@@ -4,6 +4,7 @@ import type { ConsolaInstance } from "consola";
 import { loadCountryData } from "./src/data.ts";
 import { hDist } from "./src/distance.ts";
 import { logger } from "./src/log.ts";
+import { isSuccess } from "./src/result.ts";
 import { toPoint } from "./src/utils.ts";
 
 type Command = (args: string[], log: ConsolaInstance) => Promise<number>;
@@ -20,11 +21,13 @@ async function distance(args: string[], log: ConsolaInstance) {
 		log.warn("Two ZIP codes required.");
 		return 1;
 	}
-	const entryMap = await loadCountryData(country);
-	if (!entryMap) {
+	const res = await loadCountryData(country);
+	if (!isSuccess(res)) {
 		log.warn(`Unable to load data. (country: ${country})`);
+		log.warn(`Error: ${res.err}`);
 		return 1;
 	}
+	const entryMap = res.result;
 	const c1 = entryMap.get(code1);
 	if (!c1) {
 		log.error(`Unable to find postal code ${code1}`);
@@ -59,22 +62,26 @@ const COMMANDS = new Map<string, Command>(
 	[distance, info, load].map((f) => [f.name, f]),
 );
 
-if (import.meta.path === Bun.main) {
+export async function main(argv: string[] = process.argv): Promise<number> {
 	const log = logger();
-	const [cmd, ...rest] = process.argv.slice(2);
+	const [cmd, ...rest] = argv.slice(2);
 	if (!cmd) {
 		log.warn(`No command given.`);
-		process.exit(1);
+		return 1;
 	}
 	const cmdFunction = COMMANDS.get(cmd);
 	if (!cmdFunction) {
 		log.warn(`Unkown command "${cmd}".`);
 		log.warn(`Command must be one of: ${[...COMMANDS.keys()].join(", ")}.`);
-		process.exit(1);
+		return 1;
 	}
 	const start = performance.now();
 	const code = await cmdFunction(rest, log.withTag(cmd));
 	const elapsed = dFormat(performance.now() - start);
 	log.info(`Elapsed: ${elapsed || "0s"}`);
-	process.exit(code);
+	return code;
+}
+
+if (import.meta.path === Bun.main) {
+	process.exit(await main());
 }
