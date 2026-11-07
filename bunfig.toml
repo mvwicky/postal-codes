@@ -1,2 +1,4 @@
 [test]
 coverage = true
+coverageReporter = ["text", "lcov"]
+coverageDir = "./.cov"
