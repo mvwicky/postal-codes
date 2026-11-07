@@ -76,7 +76,7 @@ class URNG_16 extends RNGBase {
 			this.fill();
 		}
 		const n = this.#arr[this.#idx];
-		if (n === undefined) {
+		if (typeof n !== "number") {
 			throw new RandError(`Unable to get value (arrSize=${this.#arr.length})`);
 		}
 		this.#idx += 1;
@@ -98,11 +98,7 @@ function makeMash() {
 	let n = 0xefc8249d;
 	return (data: string | number[]) => {
 		const inpData = typeof data === "string" ? decodeString(data) : data;
-		for (let i = 0; i < inpData.length; i++) {
-			const d = inpData[i];
-			if (!d) {
-				break;
-			}
+		for (const d of inpData) {
 			n += d;
 			let h = 0.02519603282416938 * n;
 			n = h >>> 0;
