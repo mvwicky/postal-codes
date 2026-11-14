@@ -1,4 +1,5 @@
 name: Fly Deploy
+# https://hugovk.dev/blog/2026/lock-github-actions/
 on:
   workflow_dispatch:
   push:
@@ -6,6 +7,7 @@ on:
       - main
     paths-ignore:
       - "cli.ts"
+      - "tests/**"
 jobs:
   deploy:
     name: Deploy app
