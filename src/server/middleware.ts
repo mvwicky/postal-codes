@@ -1,5 +1,7 @@
-import { logger } from "../log";
-import { logMemory } from "../utils";
+import process from "node:process";
+
+import { logger } from "../log.ts";
+import { logMemory } from "../utils.ts";
 
 export type Handler<T extends string = string> = (
 	req: Bun.BunRequest<T>,
@@ -9,10 +11,10 @@ export type Middleware<T extends string = string> = (
 ) => Handler<T>;
 
 export function timing<T extends string = string>(): Middleware<T> {
-	return function timingMW<T extends string = string>(
-		next: Handler<T>,
-	): Handler<T> {
-		return async (req: Bun.BunRequest<T>) => {
+	return function timingMW<U extends string = string>(
+		next: Handler<U>,
+	): Handler<U> {
+		return async (req: Bun.BunRequest<U>) => {
 			const start = Bun.nanoseconds();
 			const res = await next(req);
 			const elapsed = Bun.nanoseconds() - start;
@@ -23,10 +25,10 @@ export function timing<T extends string = string>(): Middleware<T> {
 }
 
 export function cors<T extends string = string>(): Middleware<T> {
-	return function corsMW<T extends string = string>(
-		next: Handler<T>,
-	): Handler<T> {
-		return async (req: Bun.BunRequest<T>) => {
+	return function corsMW<U extends string = string>(
+		next: Handler<U>,
+	): Handler<U> {
+		return async (req: Bun.BunRequest<U>) => {
 			const res = await next(req);
 			res.headers.set("Access-Control-Allow-Origin", "*");
 			return res;
@@ -35,10 +37,10 @@ export function cors<T extends string = string>(): Middleware<T> {
 }
 
 export function logging<T extends string = string>(): Middleware<T> {
-	return function loggingMW<T extends string = string>(
-		next: Handler<T>,
-	): Handler<T> {
-		return async (req: Bun.BunRequest<T>) => {
+	return function loggingMW<U extends string = string>(
+		next: Handler<U>,
+	): Handler<U> {
+		return async (req: Bun.BunRequest<U>) => {
 			logger().info(`${req.method} ${req.url}`);
 			return next(req);
 		};
@@ -46,10 +48,10 @@ export function logging<T extends string = string>(): Middleware<T> {
 }
 
 export function memoryUsage<T extends string = string>(): Middleware<T> {
-	return function memMW<T extends string = string>(
-		next: Handler<T>,
-	): Handler<T> {
-		return async (req: Bun.BunRequest<T>) => {
+	return function memMW<U extends string = string>(
+		next: Handler<U>,
+	): Handler<U> {
+		return async (req: Bun.BunRequest<U>) => {
 			const start = process.memoryUsage();
 			const res = await next(req);
 			const end = process.memoryUsage();

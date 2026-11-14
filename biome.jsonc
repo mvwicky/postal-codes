@@ -1,8 +1,9 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.6.2/schema.json",
+	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
 	"assist": {
 		"actions": {
 			"source": {
+				"useSortedPackageJson": "on",
 				"organizeImports": {
 					"level": "on",
 					"options": {
@@ -21,5 +22,23 @@
 		"clientKind": "git",
 		"enabled": true,
 		"useIgnoreFile": true
+	},
+	"linter": {
+		"rules": {
+			"complexity": {
+				"useSimplifiedLogicExpression": "error"
+			},
+			"correctness": {
+				"noProcessGlobal": "on"
+			},
+			"performance": {
+				"noAwaitInLoops": "error",
+				"useTopLevelRegex": "error"
+			},
+			"suspicious": {
+				"noShadow": "error"
+			}
+		},
+		"domains": { "project": "none" }
 	}
 }

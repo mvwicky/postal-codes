@@ -1,6 +1,6 @@
 import { expect } from "bun:test";
 
-import type { Result, ResultError, ResultSuccess } from "../src/result";
+import type { Result, ResultError, ResultSuccess } from "../src/result.ts";
 
 export function expectIsSuccess<T>(
 	res: Result<T>,

@@ -1,3 +1,10 @@
+/**
+ * @fileoverview Test data download/extract methods
+ *
+ * @todo Use node:vfs for downloads instead of `useTempDir`
+ * 		   See: https://nodejsdesignpatterns.com/blog/whats-new-in-nodejs-27/
+ *
+ */
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
 import * as fs from "node:fs/promises";
 import { rm } from "node:fs/promises";

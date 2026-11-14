@@ -7,7 +7,6 @@ dockerfile := "Dockerfile"
 img_path := "localhost/" + img_name + ":latest"
 volume_name := "postal-codes-data"
 default_port := "8000"
-lock_file := "./bun.lock"
 
 _default:
     @just --list --justfile {{ justfile() }}
@@ -57,19 +56,8 @@ dev:
 
 [doc("Build for production")]
 [group("bun")]
-build:
+build: check
     {{ bun }} build --target=bun --production --outdir=dist ./main.ts
-
-[doc("Cache bun dependencies")]
-[group("bun")]
-cache-deps:
-    {{ bun }} install
-
-[doc("Cache bun dependencies from scratch")]
-[group("bun")]
-reload-deps:
-    trash {{ lock_file }}
-    {{ bun }} install --force
 
 [doc("Run typechecking")]
 [group("bun")]
@@ -83,6 +71,7 @@ lint:
 
 [doc("Lint and typecheck")]
 [group("bun")]
+[parallel]
 check: typecheck lint
 
 [doc("Run automated tests")]

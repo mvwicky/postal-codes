@@ -1,7 +1,14 @@
 /// <reference no-default-lib="true" />
+/// <reference lib="WebWorker" />
+/**
+ * @fileoverview Load data with a worker.
+ *
+ * @todo Check out this structure: https://daviddalbusco.com/blog/type-safe-server-sent-events-pubsub
+ */
 
 import { Buffer } from "node:buffer";
 import * as path from "node:path";
+import process from "node:process";
 
 import type { Entry as ZipEntry } from "yauzl";
 
@@ -11,7 +18,7 @@ import { logger } from "./log.ts";
 import type { GeoName } from "./schemas.ts";
 import * as zip from "./zipfiles.ts";
 
-declare var self: Worker;
+declare var self: DedicatedWorkerGlobalScope;
 
 async function fetchCountryData(url: URL): Promise<Buffer | null> {
 	const res = await fetch(url);

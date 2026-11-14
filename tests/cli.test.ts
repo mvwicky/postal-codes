@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { main } from "../cli";
+import { main } from "../cli.ts";
 
 test("no command given", async () => {
 	const exitCode = await main(["", ""]);

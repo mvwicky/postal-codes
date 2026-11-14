@@ -6,6 +6,7 @@
 
 import { createWriteStream, promises as fs } from "node:fs";
 import * as path from "node:path";
+import process from "node:process";
 import { Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
@@ -112,8 +113,8 @@ class DataLoader {
 
 	private async checkShouldFetch(): Promise<boolean> {
 		const now = new Date();
+		const { maxAge } = this.#options;
 		try {
-			const { maxAge } = this.#options;
 			const fd = Bun.file(this.#file);
 			const stat = await fd.stat();
 			const mtime = stat.mtime ?? now;
@@ -175,6 +176,7 @@ class DataLoader {
 		const rows = file
 			.stream()
 			.pipeThrough(new TextDecoderStream())
+			//@ts-expect-error investigate
 			.pipeThrough<csv.Row>(Transform.toWeb(parseStream));
 		let [total, failed] = [0, 0];
 		for await (const elem of rows) {

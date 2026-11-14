@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import process from "node:process";
+
 import type { ConsolaInstance } from "consola";
 
 import { loadCountryData } from "./src/data.ts";

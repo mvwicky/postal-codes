@@ -1,3 +1,5 @@
+import process from "node:process";
+
 import * as c12 from "c12";
 import * as z from "zod";
 
@@ -11,7 +13,11 @@ export const ConfigSchema = z.compile(
 			port: z.number(),
 			hostname: z.hostname().optional(),
 		}),
+		// get $test() {
+		// 	return ConfigSchema.omit({ $test: true });
+		// },
 	}),
+	// .partial({ $test: true }),
 );
 
 export type Config = z.infer<typeof ConfigSchema>;

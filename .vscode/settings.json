@@ -26,5 +26,9 @@
 		"cobertura.xml",
 		"jacoco.xml",
 		"coverage.cobertura.xml"
-	]
+	],
+	"editor.codeActionsOnSave": {
+		"source.action.useSortedPackageJson.biome": "explicit",
+		"source.fixAll.biome": "explicit"
+	}
 }

@@ -1,12 +1,12 @@
-import type { Config } from "../config";
-import { loadCountryData } from "../data";
-import { hDist } from "../distance";
-import { logger } from "../log";
-import { Alea, DEFAULT_URNG16 } from "../rand";
-import { mapOrElse } from "../result";
-import { normKey, toPoint } from "../utils";
-import * as mw from "./middleware";
-import { STATUS_CODE } from "./status";
+import type { Config } from "../config.ts";
+import { loadCountryData } from "../data.ts";
+import { hDist } from "../distance.ts";
+import { logger } from "../log.ts";
+import { Alea, DEFAULT_URNG16 } from "../rand.ts";
+import { mapOrElse } from "../result.ts";
+import { normKey, toPoint } from "../utils.ts";
+import * as mw from "./middleware.ts";
+import { STATUS_CODE } from "./status.ts";
 
 type CountryRoute = `${string}/:country/${string}`;
 type InfoRoute = `${CountryRoute}/:code/${string}`;
