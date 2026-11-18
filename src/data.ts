@@ -176,8 +176,9 @@ class DataLoader {
 		const rows = file
 			.stream()
 			.pipeThrough(new TextDecoderStream())
-			//@ts-expect-error investigate
-			.pipeThrough<csv.Row>(Transform.toWeb(parseStream));
+			.pipeThrough<csv.Row>(
+				Transform.toWeb(parseStream) as ReadableWritablePair<csv.Row>,
+			);
 		let [total, failed] = [0, 0];
 		for await (const elem of rows) {
 			total += 1;
